@@ -1,18 +1,20 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-
-Vue.use(Router)
+import mainLayout from '@/mainLayout/mainLayout'
+import currentProject from '@/components/currentProject'
+Vue.use(Router);
 
 export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'landing-page',
-      component: require('@/components/QRcode').default
-    },
-    {
-      path: '*',
-      redirect: '/'
-    }
-  ]
+    routes: [
+        {
+            path: '/',
+            name: 'mainLayout',
+            component: mainLayout,
+        },
+        {
+            path: '/currentProject',
+            name:'currentProject',
+            component:currentProject,
+        }
+    ]
 })
