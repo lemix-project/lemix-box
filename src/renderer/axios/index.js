@@ -3,7 +3,7 @@ import {Message} from 'element-ui';
 
 const instance = axios.create({
     headers: {
-        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIiwiend0LWJhc2Utc2VydmljZSJdLCJleHAiOjE1NDQ0NDY5NTgsInVzZXJfbmFtZSI6Inh1eGluIiwianRpIjoiZDZhOTNiNTktODI5OS00MDIzLTkzZGMtNGIwYzZlMmJmZmUwIiwiY2xpZW50X2lkIjoiYXR0ZW5kYW5jZS1zZXJ2aWNlIiwic2NvcGUiOlsidHJ1c3RlZCJdfQ.kQ-axV1O98OHB8R2s3YeswknwmbmyzctR-E1w4Z7xAyzrHsWdgPVX5JXlOGJzZr0CUEgG8_yU4V1SYTNGzHHHfzQwREWSrxQe6qoogsrpIk44D-uxf3oaJWQg48QqARsPOMzFdiZmcJkaBxy-3lxy_-SMIVPOY3LRvU7zTHbPLE',
+        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIiwiend0LWJhc2Utc2VydmljZSJdLCJleHAiOjE1NDQ3MDgwNDQsInVzZXJfbmFtZSI6Inh1eGluIiwianRpIjoiODkzNGRkMzItNjYzNy00Y2VkLTgwYTItNTU0NGZkNjkzN2MyIiwiY2xpZW50X2lkIjoiYXR0ZW5kYW5jZS1zZXJ2aWNlIiwic2NvcGUiOlsidHJ1c3RlZCJdfQ.EXNuNU4Qdb1dbMA-oy27jK3rr4O01othaMz1k0-kBg85ZiYttsfyQYT48OC6qv_4GrUDPam1i48-ACNXqaVyeAANogo61RZXMJg0hG0ani5-htOVWw8v7biuqTWBBSWVFZqoUuxLJkQBEo9ETLlNKGtqTDwggBGS2tRXUacQcCI',
         'Content-Type': 'application/json'
     },
     defaults: {
@@ -32,9 +32,8 @@ instance.interceptors.response.use(
                 case 500:
                     Message({message: '连接超时', type: 'error'});
                     break;
-                case 409:
-                    Message({message: error.response.data.message, type: 'error'});
-                    break;
+                default:
+                    Message({message:error.response.data.message,type:'error'});
             }
         }
         return Promise.reject(error);

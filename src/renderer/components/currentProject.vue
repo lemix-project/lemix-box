@@ -6,64 +6,90 @@
                 <div><i>{{projectName}}</i></div>
             </div>
             <div class="toolbar">
-                <!--<el-row>-->
-                <!--<el-col :span="12">-->
-                <!--<div><img src="../../../static/images/run.jpg" alt=""></div>-->
-                <!--</el-col>-->
-                <!--<el-col :span="12">-->
-                <!--<div><img src="../../../static/images/export.jpg" alt=""></div>-->
-                <!--</el-col>-->
-                <!--</el-row>-->
-                <!--<el-row>-->
-                <!--<el-col :span="12">-->
-                <!--<div><img src="../../../static/images/swich.jpg" alt=""></div>-->
-                <!--</el-col>-->
-                <!--</el-row>-->
                 <el-row>
-                    <el-button size="small" @click="buildAndRun()">Build & Run</el-button>
-                    <el-button size="small" @click="exportMix()">Export MixModule</el-button>
+                    <el-col :span="12">
+                        <button class="btn" @click="buildAndRun()">
+                            <img src="../../../static/images/build.png" alt=""><br>
+                            <span>Build & Run</span>
+                        </button>
+                    </el-col>
+                    <el-col :span="12">
+                        <button class="btn" @click="exportMix()">
+                            <img src="../../../static/images/export.png" alt=""><br>
+                            <span>Export MixModule</span>
+                        </button>
+                    </el-col>
                 </el-row>
                 <el-row>
-                    <el-button size="small" @click="swichProject()">Swich Project</el-button>
+                    <el-col :span="12">
+                        <button class="btn" @click="swichProject()">
+                            <img src="../../../static/images/swtich.png" alt=""><br>
+                            <span>Swtich Project</span>
+                        </button>
+                    </el-col>
                 </el-row>
             </div>
-            <div class="footer">Power by LemonIT.CN</div>
+            <div class="footer">Powered by LemonIT.CN</div>
         </el-aside>
         <el-main>
             <el-tree :data="projectData">
                 <span class="custom-tree-node" slot-scope="{ node, data }">
-                    <span>{{ node.label }}</span>
-                    <span v-show="!data.isIncludeHtml&&data.children.length===0">
-                        <el-button
-                                type="text"
-                                size="mini"
-                                @click="() => addDir(data)"
-                        >
-                            addDir
+                    <span>
+                        <span v-if="data.isIncludeHtml">
+                            <img class="icon" src="../../../static/images/page.png" alt="">
+                        </span>
+                        <span v-else>
+                            <img class="icon" src="../../../static/images/dir.png" alt="">
+                        </span>
+                        <span>{{ node.label }}</span>
+                    </span>
+                    <span>
+                        <span v-show="!data.isIncludeHtml&&data.children.length===0">
+                            <el-button type="text" size="mini" @click="addDir(data)">
+                            <img class="icon" src="../../../static/images/dir-add.png" alt="">
                         </el-button>
-                        <el-button
-                                type="text"
-                                size="mini"
-                                @click="() => addModel(node, data)"
-                        >
-                            addModel                        </el-button>
+                        <el-button type="text" size="mini" @click="addModel(node, data)">
+                            <img class="icon" src="../../../static/images/page-add.png" alt="">
+                        </el-button>
+                        </span>
+                        <span id="remove"
+                              v-show="!(['config','pages','static'].includes(node.label)&&node.level ===1)">
+                            <el-button type="text" size="mini" @click="remove(data)">
+                            <img class="remove" src="../../../static/images/remove.png" alt="">
+                        </el-button>
+                        </span>
                     </span>
                 </span>
             </el-tree>
             <div class="btn">
-                <el-button type="text" size="mini" @click="addRootDir()">Add root directory</el-button>
+                <img class="icon" src="../../../static/images/dir-add.png" alt="">
+                <el-button type="text" size="mini" @click="addRootDir()">
+                    Add root directory
+                </el-button>
             </div>
         </el-main>
+        <el-dialog
+                :visible.sync="dialogVisible"
+                width="340px"
+                @opened="makeQRCode"
+        >
+            <div id="qrCode" v-loading="dialogLoading"></div>
+            <span slot="footer" class="dialog-footer">
+        <!--<el-button @click="dialogVisible = false" size="mini">取 消</el-button>-->
+                <!--<el-button type="primary" @click="dialogVisible = false" size="mini">确 定</el-button>-->
+        </span>
+        </el-dialog>
     </el-container>
 </template>
 
 <script>
     import fs from 'fs'
     import path from 'path'
-    import child_process from 'child_process'
     import JSZip from 'jszip'
     import FileSaver from 'file-saver'
-    import watch from 'watch'
+    import build from '../build/index'
+    import QRCode from 'qrcodejs2'
+    import chokidar from 'chokidar'
 
     export default {
         name: "currentProject",
@@ -78,12 +104,16 @@
                 },
                 loading: false,
                 pluginPath: '',
-                iconPath: ''
+                iconPath: '',
+                dialogVisible: false,
+                watcher: null,
+                downloadUrl: '',
+                dialogLoading: false
             }
         },
         methods: {
             /**
-             * 初始化
+             * 界面初始化
              */
             init() {
                 if (this.$route.params.project) {
@@ -93,13 +123,12 @@
                     this.projectModel.children = [];
                     this.$set(this, "projectData", this.projectModel.children);
                     this.readDir(project.path);
-                    this.watchFileTrees();
                 }
             },
             /**
              * 读取项目目录结构
              * @param path
-             * @param parent
+             * @param model
              */
             readDir(path, model = this.projectModel) {
                 let _this = this;
@@ -122,10 +151,16 @@
                     }
                 })
             },
+            /**
+             * 返回主页面
+             */
             swichProject() {
                 this.$router.push({
                     name: 'mainLayout'
-                })
+                });
+                if (this.watcher) {
+                    this.watcher.close();
+                }
             },
             /**
              * 添加一个子级空目录
@@ -149,40 +184,45 @@
             addModel(node, data) {
                 let templatePath = path.resolve('./static/template/index.html');
                 if (process.env.NODE_ENV !== "development") {
-                    templatePath = __dirname.replace(".asar", "") + "/static/template/index.html";
+                    templatePath = __dirname + "/static/template/index.html";
                 }
                 let currentPath = data.path;
                 this.inputDirName()
                     .then(({value}) => {
-                        fs.readFile(templatePath, "utf-8", function (err, template) {
-                            if (!err) {
-                                let newPath = currentPath + "\\" + value;
-                                fs.mkdir(newPath, function (err) {
+                            if (value) {
+                                fs.readFile(templatePath, "utf-8", function (err, template) {
                                     if (!err) {
-                                        fs.writeFile(newPath + "\\index.html", template, "utf-8", function (err) {
-                                            if (err) {
-                                                console.warn(err);
-                                            } else {
+                                        let newPath = currentPath + "\\" + value;
+                                        fs.mkdir(newPath, function (err) {
+                                            if (!err) {
+                                                fs.writeFile(newPath + "\\index.html", template, "utf-8", function (err) {
+                                                    if (err) {
+                                                        console.warn(err);
+                                                    } else {
 
+                                                    }
+                                                })
                                             }
                                         })
+                                    } else {
+                                        throw err;
                                     }
                                 })
                             } else {
-                                throw err;
+                                reject()
                             }
-                        })
-                    }).catch((err) => {
+                        }
+                    ).catch((err) => {
                     throw err;
                 });
             },
             /**
              * 编译
+             * @param callback
              */
             buildProject(callback) {
                 let projectPath = this.projectPath;
                 let buildPath = path.resolve('./projectDist');
-                let _this = this;
                 this.loading = true;
                 let pluginPath;
                 if (process.env.NODE_ENV !== "development") {
@@ -190,33 +230,28 @@
                 } else {
                     pluginPath = "static/build/index.js";
                 }
-                child_process.exec('node ' + pluginPath + " " + projectPath + " " + buildPath, function (error, stdout, stderr) {
-                    if (error) {
-                        _this._writeLog(error);
-                        _this.loading = false;
-                        return;
-                    }
-                    console.log(stdout);
-                    callback(buildPath);
-                    _this.emptyDir(buildPath);
-                    _this.rmEmptyDir(buildPath);
-                    _this.loading = false;
-                })
-            },
+                build.build(projectPath, buildPath);
+                callback(buildPath);
+                this.removeDir(buildPath);
+                this.loading = false;
+            }
+            ,
             /**
              * 上传
              */
             buildAndRun() {
                 this.buildProject(this.upLoadZip);
-            },
+            }
+            ,
             /**
              * 导出
              */
             exportMix() {
                 this.buildProject(this.condense)
-            },
+            }
+            ,
             /**
-             * 压缩导出
+             * 压缩（导出）
              * @param buildPath
              */
             condense(buildPath) {
@@ -226,13 +261,12 @@
                 this.read(buildPath, zip);
                 zip.generateAsync({type: 'blob'})
                     .then(function (content) {
-                        // see FileSaver.js
-                        // console.log(content);
                         FileSaver.saveAs(content, projectName + '.zip');
                     });
-            },
+            }
+            ,
             /**
-             * 压缩上传
+             * 压缩（上传）
              * @param buildPath
              */
             upLoadZip(buildPath) {
@@ -247,23 +281,45 @@
                         _this.getPreSignedUrl('plugin', pluginBuffer);
                         _this.getPreSignedUrl('icon', iconBuffer);
                         // setTimeout(function () {
-                        _this.addPlugin(config)
+                        _this.addPlugin(config);
                         // }, 2000)
-
                     })
-            },
+            }
+            ,
+            /**
+             * 写入时间戳
+             * @param path
+             */
             setPackageTime(path) {
                 const package_time = Number(new Date());
                 let configJson = this.getConfig(path);
                 configJson.package_time = package_time;
                 fs.writeFileSync(path + '/config/config.json', JSON.stringify(configJson), 'utf-8');
-            },
+            }
+            ,
+            /**
+             * 获取插件配置
+             * @param path
+             * @returns {json}
+             */
             getConfig(path) {
                 return JSON.parse(fs.readFileSync(path + '/config/config.json', 'utf-8'));
-            },
+            }
+            ,
+            /**
+             * 获取插件图标
+             * @param path
+             * @returns {Buffer}
+             */
             getIcon(path) {
                 return fs.readFileSync(path + '/config/icon.png');
-            },
+            }
+            ,
+            /**
+             * 获取预签名地址并上传
+             * @param type
+             * @param buffer
+             */
             getPreSignedUrl(type, buffer) {
                 let suffix = type === 'plugin' ? this.projectName + '.zip' : 'icon.png';
                 let bucket = type === 'plugin' ? 'zwt' : 'public';
@@ -273,12 +329,10 @@
                     "path": path,
                     "http_method": "PUT"
                 };
-                console.log(bucket, path);
                 type === 'plugin' ? this.pluginPath = 'zwt/' + path : this.iconPath = 'public/' + path;
                 const url = 'http://192.168.12.53:31022/base/attachment/action/generate-s3-pre-signed-url';
                 this.$http.post(url, JSON.stringify(data)).then((res) => {
-                    // 上传
-                    // return this.$http.put(res.data, buffer);
+                    // 预签名地址上传
                     this.$http.put(res.data, buffer).then((res) => {
                         console.log(type, 'success');
                     }).catch((error) => {
@@ -290,7 +344,12 @@
                     this._writeLog(error);
                 })
 
-            },
+            }
+            ,
+            /**
+             * 新增插件条目
+             * @param config
+             */
             addPlugin(config) {
                 let url = 'http://192.168.12.53:31022/base/plugin';
                 let data = {
@@ -300,16 +359,20 @@
                     "icon_path": this.iconPath,
                     "description": config.description,
                     "author": config.author
-                }
+                };
                 this.$http.post(url, JSON.stringify(data)).then((res) => {
-                    this.$message({message: '上传成功！', type: 'success'})
+                    let pkid = res.data.pkid,
+                        package_time = res.data.package_time;
+                    this.getDownloadUrl(pkid, package_time);
                 }).catch((error) => {
-                    console.log(error);
                     this._writeLog(error);
                 })
-            },
+            }
+            ,
             /**
              * 读取编译后的项目文件，添加到压缩对象
+             * @param path
+             * @param zip
              */
             read(path, zip) {
                 // let config = fs.readFileSync(path, 'utf-8');
@@ -325,17 +388,17 @@
                         zip.file(ele, fr);
                     }
                 })
-            },
+            }
+            ,
             /**
              * 监听项目目录结构是否有改动
              */
             watchFileTrees() {
                 let _this = this;
-                let chokidar = require('chokidar');
-                let watcher = chokidar.watch(_this.projectPath);
+                this.watcher = chokidar.watch(_this.projectPath);
                 let log = console.log.bind(console);
                 let ready = false;
-                watcher
+                this.watcher
                     .on('ready', function () {
                         console.info('Initial scan complete. Ready for changes.');
                         ready = true
@@ -349,7 +412,6 @@
                     .on('addDir', function (path) {
                         if (ready) {
                             log('Directory', path, 'has been added');
-                            // _this.readDir(_this.projectPath);
                             _this.init();
                         }
                     })
@@ -371,16 +433,20 @@
                             _this.init();
                         }
                     })
-            },
+            }
+            ,
             /**
              * 输入文件夹或者文件名
              */
             inputDirName() {
                 return this.$prompt('Please input directory(page) name:', {
                     confirmButtonText: 'Create',
-                    showCancelButton: false
+                    showCancelButton: false,
+                    inputPattern: /^[A-Za-z]+$/,
+                    inputErrorMessage: 'Please input directory(page) name correctly!(e.g.:a-zA-Z)'
                 })
-            },
+            }
+            ,
             /**
              * 添加跟文件夹
              */
@@ -391,43 +457,30 @@
                 }).catch((err) => {
                     throw err;
                 })
-            },
+            }
+            ,
             /**
-             * 清空文件夹
+             * 删除文件夹
              * @param fileUrl
              */
-            emptyDir(fileUrl) {
+            removeDir(fileUrl) {
                 let files = fs.readdirSync(fileUrl);//读取该文件夹
                 let _this = this;
                 files.forEach(function (file) {
                     let stats = fs.statSync(fileUrl + '/' + file);
                     if (stats.isDirectory()) {
-                        _this.emptyDir(fileUrl + '/' + file);
+                        _this.removeDir(fileUrl + '/' + file);
                     } else {
                         fs.unlinkSync(fileUrl + '/' + file);
                     }
                 });
-            },
+                fs.rmdirSync(fileUrl);
+            }
+            ,
             /**
-             * 删除空文件夹
-             * @param fileUrl
+             * 获取当前日期
+             * @returns {string}
              */
-            rmEmptyDir(fileUrl) {
-                let files = fs.readdirSync(fileUrl);
-                let _this = this;
-                if (files.length > 0) {
-                    var tempFile = 0;
-                    files.forEach(function (fileName) {
-                        tempFile++;
-                        _this.rmEmptyDir(fileUrl + '/' + fileName);
-                    });
-                    if (tempFile == files.length) {//删除母文件夹下的所有字空文件夹后，将母文件夹也删除
-                        fs.rmdirSync(fileUrl);
-                    }
-                } else {
-                    fs.rmdirSync(fileUrl);
-                }
-            },
             getDate() {
                 const date = new Date();
                 const y = date.getFullYear();
@@ -438,29 +491,127 @@
                     ? '0' + date.getDate()
                     : date.getDate();
                 return y.toString() + m + d;
-            },
-            uploadFile(url, fileName) {
-                let options = {
-                    method: 'PUT',
-                    url: url,
-                    body: fs.readFileSync(fileName)
+            }
+            ,
+            /**
+             * 获取插件临时下载路径
+             * @param pkid
+             * @param package_time
+             */
+            getDownloadUrl(pkid, package_time) {
+                let url = 'http://192.168.12.53:31022/base/plugin/action/get-temp-url?pkid=' + pkid + '&package_time=' + package_time;
+                this.$http.get(url).then(res => {
+                    this.downloadUrl = res.data;// 临时下载路径，生成二维码
+                    this.dialogVisible = true;
+                }).catch(error => {
+                    console.log(error);
+                    this._writeLog(error);
+                })
+            }
+            ,
+            /**
+             * dialog opened 回调（生成二维码）
+             */
+            makeQRCode() {
+                this.dialogLoading = true;
+                let codeEle = document.querySelector("#qrCode");
+                this.removeAllChilds();
+                let qrCode = new QRCode(codeEle, {width: 300, height: 300});
+                let iconSrc = 'http://192.168.12.53:31005/' + this.iconPath;
+                let downloadUrl = this.downloadUrl;
+                console.log(downloadUrl);
+                qrCode.makeCode(downloadUrl);
+                this._makeLogo(qrCode, iconSrc);
+                this.dialogLoading = false;
+            }
+            ,
+            /**
+             * 清除已存在的二维码
+             */
+            removeAllChilds() {
+                let codeEle = document.querySelector("#qrCode");
+                while (codeEle.hasChildNodes()) //当elem下还存在子节点时 循环继续
+                {
+                    codeEle.removeChild(codeEle.firstChild);
                 }
+            }
+            ,
+            /**
+             * 删除文件夹（或页面）
+             * @param data
+             */
+            remove(data) {
+                this.$confirm('此操作将删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    /**
+                     * ----- 待优化 -----
+                     * chokidar监听文件变化，
+                     * 当通过node fs 文件系统删除文件夹时，
+                     * 会产生类似异步删除操作的报错
+                     * 即总是报‘父文件夹不为空’这个错误，
+                     * 暂时解决方法为：临时关闭文件监听，
+                     * 删除操作结束后重启监听程序，
+                     * 并刷新页面
+                     */
+                    this.watcher.close();
+                    let selectPath = data.path;
+                    this.removeDir(selectPath);
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功!'
+                    });
+                    this.init();
+                    this.watchFileTrees();
+                }).catch((err) => {
+                    // this._writeLog(err);
+                    console.error(err);
+                    this.$message({
+                        type: 'info',
+                        message: '操作失败，详情请查看日志文件'
+                    });
+                });
             }
         },
         mounted() {
             this.init();
-            // this.getPreSignedUrl();
+            this.watchFileTrees();
         }
     }
 </script>
 
 <style scoped>
+    .icon {
+        position: relative;
+        top: 1px;
+        height: 12px;
+    }
+
+    #remove {
+        height: 12px;
+        overflow: hidden;
+    }
+
+    #remove .remove {
+        position: relative;
+        top: 2px;
+        height: 14px;
+        margin-left: 8px;
+    }
+
+    #qrCode {
+        width: 300px;
+        height: 300px;
+    }
 
     aside {
         position: relative;
         background-color: #353535;
         color: #FFFFFF;
         height: 543px;
+        width: 200px !important;
     }
 
     aside .header {
@@ -476,19 +627,36 @@
     aside .toolbar {
         height: 200px;
         padding: 16px;
+
+    }
+
+    aside .toolbar .el-col {
+        text-align: center;
+        margin: 2px 0;
     }
 
     aside .toolbar button {
         background-color: transparent !important;
         color: #FFFFFF;
+        border: 1px solid #505050;
+        width: 80px;
+        height: 80px;
+        font-size: 10px;
+        outline-color: #909399;
+    }
+
+    aside .toolbar button img {
+        height: 24px;
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 
     aside .footer {
         position: absolute;
-        width: 100%;
         bottom: 10px;
-        text-align: center;
-        font-size: 12px;
+        left: 60px;
+        font-family: Helvetica;
+        font-size: 10px;
     }
 
     main {

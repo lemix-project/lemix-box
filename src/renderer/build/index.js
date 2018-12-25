@@ -5,31 +5,33 @@ let cleanCSS = require('clean-css');
 let cssMinify = new cleanCSS();
 let babel = require('babel-core');
 let es2015 = require('babel-preset-es2015');
-const filePath = process.argv[2];
-const distPath = process.argv[3];
+// const filePath = process.argv[2];
+// const distPath = process.argv[3];
 const htmlReg = /index\.html$/;
-const jsReg = /index\.js$/;
+const jsReg = /\.js$/;
 const cssReg = /index\.css$/;
 let filters = new Array();
 
-let build = function () {
-    filter();
+let build = function (filePath, distPath) {
+    filter(filePath);
     // 创建根目录./dist
     if (fs.existsSync(distPath)) {
         makeDir(filePath, distPath);
     } else {
-        fs.mkdir(distPath, function (err) {
-            if (err) {
-                console.warn(err);
-            } else {
-                makeDir(filePath, distPath);
-            }
-        })
+        fs.mkdirSync(distPath);
+        makeDir(filePath, distPath);
+        // fs.mkdir(distPath, function (err) {
+        //     if (err) {
+        //         console.warn(err);
+        //     } else {
+        //         makeDir(filePath, distPath);
+        //     }
+        // })
     }
 };
 
-let filter = function () {
-    if(fs.existsSync(filePath + '/.lemix')) {
+let filter = function (filePath) {
+    if (fs.existsSync(filePath + '/.lemix')) {
         let lemix = fs.readFileSync(filePath + '/.lemix', 'utf-8').replace(/[\r\n]/g, "^");
         let lemixArray = lemix.split('^^');
         lemixArray.push('.lemix');
@@ -46,22 +48,20 @@ let makeDir = function (currentPath, buildPath) {
     let subFiles = fs.readdirSync(currentPath);
     subFiles.forEach(function (ele) {
         if (!filters.includes(currentPath + '/' + ele)) {
-            fs.stat(currentPath + "\\" + ele, function (err, info) {
-                if (info && info.isDirectory()) {
-                    if (!fs.existsSync(buildPath + "\\" + ele)) {
-                        fs.mkdirSync(buildPath + "\\" + ele);
-                    }
-                    makeDir(currentPath + "\\" + ele, buildPath + "\\" + ele);
-
-                } else {
-                    if (fs.existsSync(buildPath)) {
-                        makeFile(buildPath, currentPath, ele);
-                    } else {
-                        fs.mkdirSync(buildPath);
-                        makeFile(buildPath, currentPath, ele);
-                    }
+            let info = fs.statSync(currentPath + '\\' + ele);
+            if (info && info.isDirectory()) {
+                if (!fs.existsSync(buildPath + "\\" + ele)) {
+                    fs.mkdirSync(buildPath + "\\" + ele);
                 }
-            })
+                makeDir(currentPath + "\\" + ele, buildPath + "\\" + ele);
+            } else {
+                if (fs.existsSync(buildPath)) {
+                    makeFile(buildPath, currentPath, ele);
+                } else {
+                    fs.mkdirSync(buildPath);
+                    makeFile(buildPath, currentPath, ele);
+                }
+            }
         }
     })
 }
@@ -70,41 +70,44 @@ let makeDir = function (currentPath, buildPath) {
 let makeFile = function (buildPath, currentPath, fileName) {
     if (!jsReg.test(fileName) && !cssReg.test(fileName)) {
         if (htmlReg.test(fileName)) {
-            fs.readFile(currentPath + "\\" + fileName, "utf-8", function (err, fr) {
-                let html = minify(
-                    fr, {
-                        removeComments: true,               // 删除注释
-                        collapseWhitespace: true,           // 删除空格
-                        minifyJS: true,
-                        minifyCSS: true,
-                        removeScriptTypeAttributes: true,    // 删除script的类型属性
-                        removeStyleLinkTypeAttributes: true  // 删除style的类型属性
-                    });
-                html = jsHandle(html, currentPath + "\\" + fileName);
-                fr = cssHandle(html, currentPath + "\\" + fileName);
-
-                fs.writeFile(buildPath + "\\" + fileName, fr, "utf-8", function (err) {
-                    if (err) {
-                        console.warn(err);
-                    } else {
-                        console.log(buildPath + "\\" + fileName, "is done");
-                    }
-                })
-            });
+            let fr = fs.readFileSync(currentPath + '\\' + fileName, 'utf-8');
+            // fs.readFile(currentPath + "\\" + fileName, "utf-8", function (err, fr) {
+            let html = minify(
+                fr, {
+                    removeComments: true,               // 删除注释
+                    collapseWhitespace: true,           // 删除空格
+                    minifyJS: true,
+                    minifyCSS: true,
+                    removeScriptTypeAttributes: true,    // 删除script的类型属性
+                    removeStyleLinkTypeAttributes: true  // 删除style的类型属性
+                });
+            html = jsHandle(html, currentPath + "\\" + fileName);
+            fr = cssHandle(html, currentPath + "\\" + fileName);
+            fs.writeFileSync(buildPath + '\\' + fileName, fr, 'utf-8');
+            // fs.writeFile(buildPath + "\\" + fileName, fr, "utf-8", function (err) {
+            //     if (err) {
+            //         console.warn(err);
+            //     } else {
+            //         console.log(buildPath + "\\" + fileName, "is done");
+            //     }
+            // })
+            // });
         } else if (!jsReg.test(fileName) && !cssReg.test(fileName)) {
-            fs.readFile(currentPath + "\\" + fileName, function (err, file) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    fs.writeFile(buildPath + "\\" + fileName, file, function (err) {
-                        if (err) {
-                            console.warn(err);
-                        } else {
-                            console.log(buildPath + "\\" + fileName, "is done");
-                        }
-                    })
-                }
-            });
+            // fs.readFile(currentPath + "\\" + fileName, function (err, file) {
+            //     if (err) {
+            //         console.log(err);
+            //     } else {
+            //         fs.writeFile(buildPath + "\\" + fileName, file, function (err) {
+            //             if (err) {
+            //                 console.warn(err);
+            //             } else {
+            //                 console.log(buildPath + "\\" + fileName, "is done");
+            //             }
+            //         })
+            //     }
+            // });
+            let file = fs.readFileSync(currentPath + '\\' + fileName);
+            fs.writeFileSync(buildPath + '\\' + fileName, file);
         }
     }
 }
@@ -203,4 +206,6 @@ let babelES6 = function (fileName) {
     return babel.transformFileSync(fileName, {presets: [es2015]}).code;
 }
 
-build();
+export default {
+    build
+}

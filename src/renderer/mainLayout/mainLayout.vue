@@ -23,7 +23,10 @@
     <!--</div>-->
     <el-container v-loading="loading" element-loading-text="正在加载插件...">
         <el-aside>
-            <div id="header"><img src="../../../static/images/head.jpg" alt=""></div>
+            <div id="header">
+                <img src="../../../static/images/lemon-it-logo.png" alt="">
+                <div>LEMIX TOOL BOX</div>
+            </div>
             <ul>
                 <li>
                     <el-button>Creat new Lemix Project</el-button>
@@ -39,9 +42,9 @@
                 </li>
             </ul>
             <div id="footer">
+                <input type="file" id="file" webkitdirectory directory/>
                 <div>Powered by LemonIT.CN</div>
             </div>
-            <input type="file" id="file" webkitdirectory directory/>
         </el-aside>
         <el-main>
             <ul>
@@ -68,7 +71,6 @@
     import QRCode from 'qrcodejs2'
     import fs from 'fs'
     import asar from 'asar'
-    import child_process from 'child_process'
 
     export default {
         name: "mainLayout",
@@ -221,42 +223,11 @@
                         }
                     })
                 }
-            },
-            proInit(){
-                let _this = this;
-                if (process.env.NODE_ENV !== "development" && !fs.existsSync("resources/app")) {
-                    let asarPath = __dirname.replace("\\dist\\electron", "");
-                    asar.extractAll(asarPath, "resources\\app", 'dist');
-                    try {
-                        this.loading = true;
-                        const es2015 = require('babel-preset-es2015');
-                    } catch (e) {
-                        child_process.exec('npm install babel-preset-es2015', function (error, stdout, stderr) {
-                            if (error) {
-                                _this.$message({
-                                    message: '插件加载失败',
-                                    type: 'warning'
-                                });
-                                _this._writeLog(error);
-                            } else {
-                                _this.$message({
-                                    message: '插件加载完成',
-                                    type: 'success'
-                                });
-                            }
-                        })
-                    } finally {
-                        this.loading = false;
-                    }
-                }
             }
         },
         mounted() {
             this.fileInputListener();
             this.readProject();
-            this.proInit();
-            // let src = 'C:\\Users\\develop\\AppData\\Local\\Programs\\lemix-box\\resources\\app.asar';
-            // asar.extractAll(src, "resources\\app",'dist');
         },
         watch: {
             projectList: {
@@ -295,15 +266,10 @@
         padding: 0;
     }
 
-    #qrcode {
-        width: 300px;
-        height: 300px;
-    }
-
     aside {
         background-color: #3F4042;
         color: #ffffff;
-        width: 200px;
+        width: 240px !important;
     }
 
     aside ul {
@@ -313,6 +279,12 @@
 
     aside #header {
         height: 213px;
+        text-align: center;
+    }
+
+    aside #header img {
+        margin-top: 40px;
+        margin-bottom: 10px;
     }
 
     aside #footer {
@@ -324,9 +296,11 @@
     }
 
     aside #footer div {
-        width: 100%;
         position: absolute;
-        bottom: 16px;
+        bottom: 10px;
+        left: 60px;
+        font-family: Helvetica;
+        font-size: 10px;
     }
 
     main {
