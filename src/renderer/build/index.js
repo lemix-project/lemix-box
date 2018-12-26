@@ -8,7 +8,7 @@ let es2015 = require('babel-preset-es2015');
 // const filePath = process.argv[2];
 // const distPath = process.argv[3];
 const htmlReg = /index\.html$/;
-const jsReg = /\.js$/;
+const jsReg = /index\.js$/;
 const cssReg = /index\.css$/;
 let filters = new Array();
 
@@ -20,13 +20,6 @@ let build = function (filePath, distPath) {
     } else {
         fs.mkdirSync(distPath);
         makeDir(filePath, distPath);
-        // fs.mkdir(distPath, function (err) {
-        //     if (err) {
-        //         console.warn(err);
-        //     } else {
-        //         makeDir(filePath, distPath);
-        //     }
-        // })
     }
 };
 
@@ -71,7 +64,6 @@ let makeFile = function (buildPath, currentPath, fileName) {
     if (!jsReg.test(fileName) && !cssReg.test(fileName)) {
         if (htmlReg.test(fileName)) {
             let fr = fs.readFileSync(currentPath + '\\' + fileName, 'utf-8');
-            // fs.readFile(currentPath + "\\" + fileName, "utf-8", function (err, fr) {
             let html = minify(
                 fr, {
                     removeComments: true,               // 删除注释
@@ -84,28 +76,7 @@ let makeFile = function (buildPath, currentPath, fileName) {
             html = jsHandle(html, currentPath + "\\" + fileName);
             fr = cssHandle(html, currentPath + "\\" + fileName);
             fs.writeFileSync(buildPath + '\\' + fileName, fr, 'utf-8');
-            // fs.writeFile(buildPath + "\\" + fileName, fr, "utf-8", function (err) {
-            //     if (err) {
-            //         console.warn(err);
-            //     } else {
-            //         console.log(buildPath + "\\" + fileName, "is done");
-            //     }
-            // })
-            // });
         } else if (!jsReg.test(fileName) && !cssReg.test(fileName)) {
-            // fs.readFile(currentPath + "\\" + fileName, function (err, file) {
-            //     if (err) {
-            //         console.log(err);
-            //     } else {
-            //         fs.writeFile(buildPath + "\\" + fileName, file, function (err) {
-            //             if (err) {
-            //                 console.warn(err);
-            //             } else {
-            //                 console.log(buildPath + "\\" + fileName, "is done");
-            //             }
-            //         })
-            //     }
-            // });
             let file = fs.readFileSync(currentPath + '\\' + fileName);
             fs.writeFileSync(buildPath + '\\' + fileName, file);
         }
