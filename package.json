@@ -59,7 +59,6 @@
     }
   },
   "dependencies": {
-    "asar": "^0.14.5",
     "axios": "^0.18.0",
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
@@ -80,7 +79,6 @@
     "vuex-electron": "^1.0.0"
   },
   "devDependencies": {
-    "asar": "^0.14.5",
     "ajv": "^6.5.0",
     "babel-loader": "^7.1.4",
     "babel-plugin-istanbul": "^4.1.6",

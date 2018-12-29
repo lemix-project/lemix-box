@@ -1,0 +1,23 @@
+[{
+    "name": "config",
+    "children": [{
+        "name": "config.json"
+      }]
+}, {
+    "name": "pages",
+    "children": [{
+        "name": "main",
+        "children": [{
+            "name": "index.html"
+          }, {
+            "name": "index.js"
+          }, {
+            "name": "index.css"
+          }, {
+            "name": "config.json"
+          }]
+      }]
+}, {
+    "name": "static",
+    "children": []
+}]

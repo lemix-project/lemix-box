@@ -1,27 +1,5 @@
 <template>
-    <!--<div>-->
-    <!--<el-row>-->
-    <!--<el-button size="small" @click="dialogVisible = true">生成二维码</el-button>-->
-    <!--<el-button size="small" type="primary" @click="readDir('E:\\Git')">遍历E盘Git文件夹</el-button>-->
-    <!--<el-button size="small" type="primary" @click="callBat()">Call bat</el-button>-->
-    <!--</el-row>-->
-    <!--<input type="file" id="file" webkitdirectory directory-->
-    <!--style="filter:alpha(opacity=0);opacity:0;width: 0;height: 0;"/>-->
-    <!--<el-button size="small" type="primary" @click="selectFile()">select file</el-button>-->
-    <!--<el-dialog-->
-    <!--title="二维码"-->
-    <!--:visible.sync="dialogVisible"-->
-    <!--width="400px"-->
-    <!--@opened="makeQRCode"-->
-    <!--&gt;-->
-    <!--<div id="qrcode" v-loading="loading"></div>-->
-    <!--<span slot="footer" class="dialog-footer">-->
-    <!--<el-button @click="dialogVisible = false" size="mini">取 消</el-button>-->
-    <!--<el-button type="primary" @click="dialogVisible = false" size="mini">确 定</el-button>-->
-    <!--</span>-->
-    <!--</el-dialog>-->
-    <!--</div>-->
-    <el-container v-loading="loading" element-loading-text="正在加载插件...">
+    <el-container v-loading="loading" element-loading-text="正在创建项目...">
         <el-aside>
             <div id="header">
                 <img src="../../../static/images/lemon-it-logo.png" alt="">
@@ -29,7 +7,7 @@
             </div>
             <ul>
                 <li>
-                    <el-button>Creat new Lemix Project</el-button>
+                    <el-button @click="createProject()">Creat new Lemix Project</el-button>
                 </li>
                 <li>
                     <el-button @click="selectFile()">Open an exists Lemix Project</el-button>
@@ -68,61 +46,61 @@
 </template>
 
 <script>
-    import QRCode from 'qrcodejs2'
     import fs from 'fs'
-    import asar from 'asar'
+    import path from 'path'
 
     export default {
         name: "mainLayout",
         data() {
             return {
                 dialogVisible: false,
-                loading: false,
                 projectList: [],
                 test: {},
                 loading: false,
+                flag: '',
+                templatePath: ''
             }
         },
         methods: {
             /**
              * dialog opened 回调
              */
-            makeQRCode() {
-                this.loading = true;
-                let codeEle = document.querySelector("#qrcode");
-                this.removeAllChilds();
-                let qrcode = new QRCode(codeEle, {width: 300, height: 300});
-                let src = "static/images/logo.png";
-                let randomString = this.randomString(64);
-                qrcode.makeCode(randomString);
-                this._makeLogo(qrcode, src);
-                this.loading = false;
-            },
+            // makeQRCode() {
+            //     this.loading = true;
+            //     let codeEle = document.querySelector("#qrcode");
+            //     this.removeAllChilds();
+            //     let qrcode = new QRCode(codeEle, {width: 300, height: 300});
+            //     let src = "static/images/logo.png";
+            //     let randomString = this.randomString(64);
+            //     qrcode.makeCode(randomString);
+            //     this._makeLogo(qrcode, src);
+            //     this.loading = false;
+            // },
             /**
              * 清除已存在的二维码
              */
-            removeAllChilds() {
-                let codeEle = document.querySelector("#qrcode");
-                while (codeEle.hasChildNodes()) //当elem下还存在子节点时 循环继续
-                {
-                    codeEle.removeChild(codeEle.firstChild);
-                }
-            },
+            // removeAllChilds() {
+            //     let codeEle = document.querySelector("#qrcode");
+            //     while (codeEle.hasChildNodes()) //当elem下还存在子节点时 循环继续
+            //     {
+            //         codeEle.removeChild(codeEle.firstChild);
+            //     }
+            // },
             /**
              * 生成随机字符串
              * @param len
              * @returns {string}
              */
-            randomString(len) {
-                len = len || 32;
-                let $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let maxPos = $chars.length;
-                let randomString = '';
-                for (let i = 0; i < len; i++) {
-                    randomString += $chars.charAt(Math.floor(Math.random() * maxPos));
-                }
-                return randomString;
-            },
+            // randomString(len) {
+            //     len = len || 32;
+            //     let $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            //     let maxPos = $chars.length;
+            //     let randomString = '';
+            //     for (let i = 0; i < len; i++) {
+            //         randomString += $chars.charAt(Math.floor(Math.random() * maxPos));
+            //     }
+            //     return randomString;
+            // },
             /**
              * 遍历文件
              */
@@ -154,20 +132,46 @@
             //     this._callBat("test.bat", null, {cwd: absolute_path})
             // },
             /**
-             * 选择项目
+             * 打开项目
              */
             selectFile() {
                 let file_input = document.querySelector("#file");
+                this.flag = 'open';
                 file_input.click();
             },
+            /**
+             * 创建项目
+             */
+            createProject() {
+                let file_input = document.querySelector("#file");
+                this.flag = 'create';
+                file_input.click();
+            },
+            /**
+             * 监听input
+             */
             fileInputListener() {
                 let file_input = document.querySelector("#file");
                 let _this = this;
                 file_input.addEventListener("change", function () {
                     if (this.files.length > 0) {
-                        let projectPath = this.files[0].path;
-                        let projectName = projectPath.split("\\").splice(-1).toString();
-                        _this.projectList.push({"name": projectName, "path": projectPath});
+                        if (_this.flag === 'open') {
+                            let projectPath = this.files[0].path;
+                            let projectName = projectPath.split("\\").splice(-1).toString();
+                            _this.projectList.push({"name": projectName, "path": projectPath});
+                        } else if (_this.flag === 'create') {
+                            let createPath = this.files[0].path;
+                            _this.inputDirName().then(({value}) => {
+                                _this.loading = true;
+                                let projectPath = createPath + '\\' + value;
+                                _this.readTemp(projectPath);
+                                let projectName = value.toString();
+                                _this.projectList.push({"name": projectName, "path": projectPath});
+                                _this.loading = false;
+                            }).catch(error => {
+                                _this._writeLog(error)
+                            })
+                        }
                     }
                 });
             },
@@ -222,6 +226,67 @@
                             _this.projectList = JSON.parse(fr);
                         }
                     })
+                }
+            },
+            /**
+             * 输入文件夹或者文件名
+             */
+            inputDirName() {
+                return this.$prompt('Please input project name:', {
+                    confirmButtonText: 'Create',
+                    showCancelButton: false,
+                    inputPattern: /^[A-Za-z]+$/,
+                    inputErrorMessage: 'Please input project name correctly!(e.g.:[a-zA-Z])'
+                })
+            },
+            /**
+             * 读取模板
+             * @param projectPath
+             */
+            readTemp(projectPath) {
+                let templatePath = path.resolve('./static/template');
+                if (process.env.NODE_ENV !== "development") {
+                    templatePath = __dirname + "/static/template";
+                }
+
+                if (!fs.existsSync(projectPath)) {
+                    fs.mkdirSync(projectPath)
+                }
+                this.templatePath = templatePath;
+                fs.readFile(templatePath + '/projectTemp.json', 'utf-8', (err, fr) => {
+                    if (err) {
+                        this._writeLog(err);
+                    } else {
+                        let temp = JSON.parse(fr);
+                        this.create(temp, projectPath);
+                        // 将新创建的项目添加到项目列表
+                    }
+                })
+            },
+            /**
+             * 创建项目目录结构
+             * @param temp
+             * @param path
+             */
+            create(temp, path) {
+                for (let key in temp) {
+                    let sub = temp[key];
+                    if (sub.children) {
+                        let cPath = path + '\\' + sub.name;
+                        fs.mkdirSync(cPath);
+                        this.create(sub.children, cPath);
+                    } else {
+                        let cPath = path + '\\' + sub.name;
+                        if (sub.name === 'index.html') {
+                            let buffer = fs.readFileSync(this.templatePath + '/index.html');
+                            fs.writeFileSync(cPath, buffer)
+                        } else if (sub.name === 'config.json' && path.split('\\').pop() === 'config') {
+                            let buffer = fs.readFileSync(this.templatePath + '/config.json');
+                            fs.writeFileSync(cPath, buffer);
+                        } else {
+                            fs.writeFileSync(cPath, "");
+                        }
+                    }
                 }
             }
         },

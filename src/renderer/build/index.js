@@ -30,7 +30,7 @@ let filter = function (filePath) {
         lemixArray.push('.lemix');
         lemixArray.forEach(function (value, index) {
             if (value !== '') {
-                filters.push(filePath + '/' + value);
+                filters.push(filePath + '\\' + value);
             }
         });
     }
@@ -40,7 +40,7 @@ let filter = function (filePath) {
 let makeDir = function (currentPath, buildPath) {
     let subFiles = fs.readdirSync(currentPath);
     subFiles.forEach(function (ele) {
-        if (!filters.includes(currentPath + '/' + ele)) {
+        if (!filters.includes(currentPath + '\\' + ele)) {
             let info = fs.statSync(currentPath + '\\' + ele);
             if (info && info.isDirectory()) {
                 if (!fs.existsSync(buildPath + "\\" + ele)) {

@@ -108,7 +108,10 @@
                 dialogVisible: false,
                 watcher: null,
                 downloadUrl: '',
-                dialogLoading: false
+                dialogLoading: false,
+                host: 'http://testapi-lyzwt.lnzhongwang.net',
+                port: '31029',
+                filters: []
             }
         },
         methods: {
@@ -122,6 +125,7 @@
                     this.projectPath = project.path;
                     this.projectModel.children = [];
                     this.$set(this, "projectData", this.projectModel.children);
+                    this.filter();
                     this.readDir(project.path);
                 }
             },
@@ -134,19 +138,21 @@
                 let _this = this;
                 let menu = fs.readdirSync(path);
                 menu.forEach(function (ele) {
-                    let info = fs.statSync(path + "\\" + ele);
-                    if (info && info.isDirectory()) {
-                        let dir = {
-                            'label': ele,
-                            'children': [],
-                            'isIncludeHtml': false,
-                            'path': path + '\\' + ele
-                        };
-                        model.children.push(dir);
-                        _this.readDir(path + "\\" + ele, dir);
-                    } else {
-                        if (_this.htmlReg.test(ele)) {
-                            model.isIncludeHtml = true;
+                    if (!_this.filters.includes(path + '\\' + ele)) {
+                        let info = fs.statSync(path + "\\" + ele);
+                        if (info && info.isDirectory()) {
+                            let dir = {
+                                'label': ele,
+                                'children': [],
+                                'isIncludeHtml': false,
+                                'path': path + '\\' + ele
+                            };
+                            model.children.push(dir);
+                            _this.readDir(path + "\\" + ele, dir);
+                        } else {
+                            if (_this.htmlReg.test(ele)) {
+                                model.isIncludeHtml = true;
+                            }
                         }
                     }
                 })
@@ -273,16 +279,30 @@
                 this.setPackageTime(buildPath);
                 const config = this.getConfig(buildPath);
                 const iconBuffer = this.getIcon(buildPath); // 获取图片
+                this.getPreSignedUrl('icon').then(res => {
+                    this.uploadPreSignedUrl(res.data, iconBuffer).then(res => {
+                        console.log('icon')
+                    }).catch(error => {
+                        this._writeLog(error)
+                    })
+                }).catch(error => {
+                    this._writeLog(error);
+                });
                 let _this = this;
                 let zip = new JSZip();
                 this.read(buildPath, zip);
                 zip.generateAsync({type: 'nodebuffer', compression: 'DEFLATE'}) // 获取插件
                     .then(function (pluginBuffer) {
-                        _this.getPreSignedUrl('plugin', pluginBuffer);
-                        _this.getPreSignedUrl('icon', iconBuffer);
-                        // setTimeout(function () {
-                        _this.addPlugin(config);
-                        // }, 2000)
+                        _this.getPreSignedUrl('plugin').then(res => {
+                            _this.uploadPreSignedUrl(res.data, pluginBuffer).then(res => {
+                                console.log('plugin')
+                                _this.addPlugin(config);
+                            }).catch(error => {
+                                _this._writeLog(error)
+                            })
+                        }).catch(error => {
+                            this._writeLog(error)
+                        });
                     })
             }
             ,
@@ -320,7 +340,7 @@
              * @param type
              * @param buffer
              */
-            getPreSignedUrl(type, buffer) {
+            getPreSignedUrl(type) {
                 let suffix = type === 'plugin' ? this.projectName + '.zip' : 'icon.png';
                 let bucket = type === 'plugin' ? 'zwt' : 'public';
                 let path = 'plugin/' + this.getDate() + '/' + suffix;
@@ -330,28 +350,22 @@
                     "http_method": "PUT"
                 };
                 type === 'plugin' ? this.pluginPath = 'zwt/' + path : this.iconPath = 'public/' + path;
-                const url = 'http://192.168.12.53:31022/base/attachment/action/generate-s3-pre-signed-url';
-                this.$http.post(url, JSON.stringify(data)).then((res) => {
-                    // 预签名地址上传
-                    this.$http.put(res.data, buffer).then((res) => {
-                        console.log(type, 'success');
-                    }).catch((error) => {
-                        console.log(error);
-                        this._writeLog(error);
-                    })
-                }).catch((error) => {
-                    console.log(error);
-                    this._writeLog(error);
-                })
-
+                const url = this.host + ':' + this.port + '/base/attachment/action/generate-s3-pre-signed-url';
+                return this.$http.post(url, JSON.stringify(data))
             }
             ,
+            uploadPreSignedUrl(data, buffer) {
+                // 预签名地址上传
+                return this.$http.put(data, buffer)
+            },
             /**
              * 新增插件条目
              * @param config
              */
             addPlugin(config) {
-                let url = 'http://192.168.12.53:31022/base/plugin';
+                console.log(config);
+                // let url = 'http://192.168.12.53:31022/base/plugin';
+                let url = this.host + ':' + this.port + '/base/plugin';
                 let data = {
                     'name': config.name,
                     'identifier': config.identifier,
@@ -360,11 +374,16 @@
                     "description": config.description,
                     "author": config.author
                 };
+                console.log(JSON.stringify(data, null, 2));
                 this.$http.post(url, JSON.stringify(data)).then((res) => {
+                    console.log(res)
                     let pkid = res.data.pkid,
                         package_time = res.data.package_time;
                     this.getDownloadUrl(pkid, package_time);
+                }, error => {
+                    console.log(error);
                 }).catch((error) => {
+                    console.log(error)
                     this._writeLog(error);
                 })
             }
@@ -375,19 +394,19 @@
              * @param zip
              */
             read(path, zip) {
-                // let config = fs.readFileSync(path, 'utf-8');
                 let _this = this;
                 let menu = fs.readdirSync(path);
                 menu.forEach(function (ele) {
-                    let info = fs.statSync(path + "\\" + ele);
-                    if (info && info.isDirectory()) {
-                        let folder = zip.folder(ele);
-                        _this.read(path + "\\" + ele, folder);
-                    } else {
-                        let fr = fs.readFileSync(path + "\\" + ele);
-                        zip.file(ele, fr);
+                        let info = fs.statSync(path + "\\" + ele);
+                        if (info && info.isDirectory()) {
+                            let folder = zip.folder(ele);
+                            _this.read(path + "\\" + ele, folder);
+                        } else {
+                            let fr = fs.readFileSync(path + "\\" + ele);
+                            zip.file(ele, fr);
+                        }
                     }
-                })
+                )
             }
             ,
             /**
@@ -395,7 +414,7 @@
              */
             watchFileTrees() {
                 let _this = this;
-                this.watcher = chokidar.watch(_this.projectPath);
+                this.watcher = chokidar.watch(_this.projectPath, {ignored: /.idea|node_modules/});
                 let log = console.log.bind(console);
                 let ready = false;
                 this.watcher
@@ -443,7 +462,7 @@
                     confirmButtonText: 'Create',
                     showCancelButton: false,
                     inputPattern: /^[A-Za-z]+$/,
-                    inputErrorMessage: 'Please input directory(page) name correctly!(e.g.:a-zA-Z)'
+                    inputErrorMessage: 'Please input directory(page) name correctly!(e.g.:[a-zA-Z])'
                 })
             }
             ,
@@ -499,7 +518,7 @@
              * @param package_time
              */
             getDownloadUrl(pkid, package_time) {
-                let url = 'http://192.168.12.53:31022/base/plugin/action/get-temp-url?pkid=' + pkid + '&package_time=' + package_time;
+                let url = this.host + ':' + this.port + '/base/plugin/action/get-temp-url?pkid=' + pkid + '&package_time=' + package_time;
                 this.$http.get(url).then(res => {
                     this.downloadUrl = res.data;// 临时下载路径，生成二维码
                     this.dialogVisible = true;
@@ -517,7 +536,7 @@
                 let codeEle = document.querySelector("#qrCode");
                 this.removeAllChilds();
                 let qrCode = new QRCode(codeEle, {width: 300, height: 300});
-                let iconSrc = 'http://192.168.12.53:31005/' + this.iconPath;
+                let iconSrc = this.host + ':31005/' + this.iconPath;
                 let downloadUrl = this.downloadUrl;
                 console.log(downloadUrl);
                 qrCode.makeCode(downloadUrl);
@@ -566,17 +585,38 @@
                     this.init();
                     this.watchFileTrees();
                 }).catch((err) => {
-                    // this._writeLog(err);
-                    console.error(err);
-                    this.$message({
-                        type: 'info',
-                        message: '操作失败，详情请查看日志文件'
-                    });
+                    if (err === 'cancel') {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除操作'
+                        });
+                    } else {
+                        this._writeLog(err);
+                        this.$message({
+                            type: 'info',
+                            message: '操作失败，详情请查看日志文件'
+                        });
+                    }
                 });
+            },
+            filter() {
+                let filePath = this.projectPath;
+                if (fs.existsSync(filePath + '/.lemix')) {
+                    let lemix = fs.readFileSync(filePath + '/.lemix', 'utf-8').replace(/[\r\n]/g, "^");
+                    let lemixArray = lemix.split('^^');
+                    lemixArray.push('.lemix');
+                    lemixArray.forEach((value, index) => {
+                        if (value !== '') {
+                            this.filters.push(filePath + '\\' + value);
+                        }
+                    });
+                }
             }
-        },
+        }
+        ,
         mounted() {
             this.init();
+            console.log(this.filters);
             this.watchFileTrees();
         }
     }
