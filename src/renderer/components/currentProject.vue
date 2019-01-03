@@ -301,7 +301,7 @@
                                 _this._writeLog(error)
                             })
                         }).catch(error => {
-                            this._writeLog(error)
+                            _this._writeLog(error)
                         });
                     })
             }
@@ -363,23 +363,29 @@
              * @param config
              */
             addPlugin(config) {
-                console.log(config);
                 // let url = 'http://192.168.12.53:31022/base/plugin';
+                /**
+                 * show qrcode when insert plugin;
+                 * show message when update plugin;
+                 * the parma
+                 */
                 let url = this.host + ':' + this.port + '/base/plugin';
                 let data = {
+                    'pkid': '97604895dc7147cc9fdb5ba70f599f63', // 插件主键
                     'name': config.name,
                     'identifier': config.identifier,
-                    "plugin_path": this.pluginPath,
-                    "icon_path": this.iconPath,
-                    "description": config.description,
-                    "author": config.author
+                    'plugin_path': this.pluginPath,
+                    'icon_path': this.iconPath,
+                    'description': config.description,
+                    'author': config.author
                 };
                 console.log(JSON.stringify(data, null, 2));
-                this.$http.post(url, JSON.stringify(data)).then((res) => {
+                this.$http.put(url, JSON.stringify(data)).then((res) => {
                     console.log(res)
-                    let pkid = res.data.pkid,
-                        package_time = res.data.package_time;
-                    this.getDownloadUrl(pkid, package_time);
+                    this.$message({message: '更新成功', type: 'success'});
+                    // let pkid = res.data.pkid,
+                    //     package_time = res.data.package_time;
+                    // this.getDownloadUrl(pkid, package_time);
                 }, error => {
                     console.log(error);
                 }).catch((error) => {
