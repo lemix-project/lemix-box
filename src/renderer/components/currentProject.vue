@@ -343,7 +343,7 @@
             getPreSignedUrl(type) {
                 let suffix = type === 'plugin' ? this.projectName + '.zip' : 'icon.png';
                 let bucket = type === 'plugin' ? 'zwt' : 'public';
-                let path = 'plugin/' + this.getDate() + '/' + suffix;
+                let path = 'plugin/' + Number(new Date()) + '/' + suffix;
                 const data = {
                     "bucket_name": bucket,
                     "path": path,
@@ -367,7 +367,7 @@
                 /**
                  * show qrcode when insert plugin;
                  * show message when update plugin;
-                 * the parma
+                 * the param is
                  */
                 let url = this.host + ':' + this.port + '/base/plugin';
                 let data = {
@@ -500,22 +500,6 @@
                     }
                 });
                 fs.rmdirSync(fileUrl);
-            }
-            ,
-            /**
-             * 获取当前日期
-             * @returns {string}
-             */
-            getDate() {
-                const date = new Date();
-                const y = date.getFullYear();
-                const m = date.getMonth() + 1 < 10
-                    ? '0' + date.getMonth() + 1
-                    : date.getMonth() + 1;
-                const d = date.getDate() < 10
-                    ? '0' + date.getDate()
-                    : date.getDate();
-                return y.toString() + m + d;
             }
             ,
             /**
