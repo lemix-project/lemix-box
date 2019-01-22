@@ -1,5 +1,5 @@
 <template>
-    <el-container v-loading="loading">
+    <el-container v-loading="loading" id="current">
         <el-aside>
             <div class="header">
                 <div><b>Current Project:</b></div>
@@ -89,7 +89,7 @@
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="complete('form')">确 定</el-button>
+                <el-button type="primary" @click="complete('form')" size="mini">确 定</el-button>
             </div>
         </el-dialog>
     </el-container>
@@ -835,5 +835,34 @@
         background-color: #434343 !important;
         border-color: #5C5C5C;
         color: #ACACAC;
+    }
+
+     #current .el-dialog {
+         background-color: #353535;
+     }
+
+    #current .el-dialog .el-dialog__title {
+        color: #ffffff;
+    }
+
+    #mainLayout .el-dialog .el-form-item__label {
+        color: #ffffff !important;
+    }
+
+    #current .el-input {
+        width: 200px;
+    }
+
+    #current .el-form-item {
+        margin-bottom: 0;
+    }
+
+    #current .el-form--label-left .el-form-item__label{
+        color: #ffffff;
+    }
+
+    #current .el-dialog__footer .el-button--mini, .el-button--small{
+        background-color: transparent;
+        border-color: #666;
     }
 </style>
