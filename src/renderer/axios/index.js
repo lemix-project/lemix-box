@@ -3,7 +3,7 @@ import {Message} from 'element-ui';
 
 const instance = axios.create({
     headers: {
-        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIiwiend0LWJhc2Utc2VydmljZSJdLCJleHAiOjE1NDYwMDU3NDgsInVzZXJfbmFtZSI6Inh1eGluIiwianRpIjoiZDJkNzE3Y2EtOWY5Yi00NzZhLWJjZDctYzkwMzY0NGFkNzk5IiwiY2xpZW50X2lkIjoiYXR0ZW5kYW5jZS1zZXJ2aWNlIiwic2NvcGUiOlsidHJ1c3RlZCJdfQ.UIVvByHa8lombo-ch1AIBub20SVHnOmvxeogbr9y7R1RuLAtJz4PT5-7M-OWY3EW53a0N7D70PNGlHFaLZTkVNx7zqFB6TBBpejnNlTj9cxro_Cwnm5MX8pHxwuxP0esOuxf6vdG6JZlE6w3LfTg6BGo9G-rW_zk3ILhSJ3Zv38',
+        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIiwiend0LWJhc2Utc2VydmljZSJdLCJleHAiOjE1NDY1MjgxOTEsInVzZXJfbmFtZSI6Inh1eGluIiwianRpIjoiOTA4NTEzMjYtNWY3NS00YzM0LWFkYjktNzc5MWMwNjIxOGUyIiwiY2xpZW50X2lkIjoiYXR0ZW5kYW5jZS1zZXJ2aWNlIiwic2NvcGUiOlsidHJ1c3RlZCJdfQ.MT92RKOWZWOw5oKbY7vXqKbSZMXOvsn439uZQf76ZXeLZm1y8q6Xtl0UfDlBFadUMt9ZBf2MDYq3nB8cl13V5LrqZYP3b-FgvJnGS1YIh2Gm98XZPdSaiNe5j0EnYZqUr_TKqB_0HyvhXC1Ms1i6V9kk8PsZrViuprBObH-E1pk',
         'Content-Type': 'application/json'
     },
     defaults: {

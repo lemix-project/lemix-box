@@ -75,9 +75,22 @@
         >
             <div id="qrCode" v-loading="dialogLoading"></div>
             <span slot="footer" class="dialog-footer">
-        <!--<el-button @click="dialogVisible = false" size="mini">取 消</el-button>-->
-                <!--<el-button type="primary" @click="dialogVisible = false" size="mini">确 定</el-button>-->
         </span>
+        </el-dialog>
+        <el-dialog title="Please input configuration" :visible.sync="dialogFormVisible" width="60%" @closed="closed()">
+            <el-form ref="form" :model="form" :rules="rules" label-position="left">
+                <el-form-item label="entrance" :label-width="formLabelWidth" prop="entrance"
+                              :inline-message="isInline">
+                    <el-input v-model="form.entrance" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="description" :label-width="formLabelWidth" prop="description"
+                              :inline-message="isInline">
+                    <el-input v-model="form.description" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="complete('form')">确 定</el-button>
+            </div>
         </el-dialog>
     </el-container>
 </template>
@@ -87,9 +100,9 @@
     import path from 'path'
     import JSZip from 'jszip'
     import FileSaver from 'file-saver'
-    import build from '../build/index'
     import QRCode from 'qrcodejs2'
     import chokidar from 'chokidar'
+    import utils from '../build/index'
 
     export default {
         name: "currentProject",
@@ -109,9 +122,25 @@
                 watcher: null,
                 downloadUrl: '',
                 dialogLoading: false,
-                host: 'http://testapi-lyzwt.lnzhongwang.net',
-                port: '31029',
-                filters: []
+                // host: 'http://testapi-lyzwt.lnzhongwang.net',
+                // port: '31029',
+                host: 'http://192.168.11.203:8082',
+                filters: [],
+                form: {
+                    'entrance': '',
+                    'description': ''
+                },
+                rules: {
+                    entrance: [
+                        {required: true, message: 'Please input entrance', trigger: 'blur'}
+                    ],
+                    description: [
+                        {required: true, message: 'Please input description', trigger: 'blur'}
+                    ]
+                },
+                dialogFormVisible: false,
+                formLabelWidth: '90px',
+                isInline: true
             }
         },
         methods: {
@@ -236,7 +265,7 @@
                 } else {
                     pluginPath = "static/build/index.js";
                 }
-                build.build(projectPath, buildPath);
+                utils.build(projectPath, buildPath);
                 callback(buildPath);
                 this.removeDir(buildPath);
                 this.loading = false;
@@ -246,14 +275,22 @@
              * 上传
              */
             buildAndRun() {
-                this.buildProject(this.upLoadZip);
+                if (this.isNewProject()) {
+                    this.dialogFormVisible = true
+                } else {
+                    this.buildProject(this.upLoadZip);
+                }
             }
             ,
             /**
              * 导出
              */
             exportMix() {
-                this.buildProject(this.condense)
+                if (this.isNewProject()) {
+                    this.dialogFormVisible = true
+                } else {
+                    this.buildProject(this.upLoadZip);
+                }
             }
             ,
             /**
@@ -279,30 +316,23 @@
                 this.setPackageTime(buildPath);
                 const config = this.getConfig(buildPath);
                 const iconBuffer = this.getIcon(buildPath); // 获取图片
-                this.getPreSignedUrl('icon').then(res => {
-                    this.uploadPreSignedUrl(res.data, iconBuffer).then(res => {
-                        console.log('icon')
-                    }).catch(error => {
-                        this._writeLog(error)
-                    })
-                }).catch(error => {
-                    this._writeLog(error);
-                });
-                let _this = this;
                 let zip = new JSZip();
                 this.read(buildPath, zip);
                 zip.generateAsync({type: 'nodebuffer', compression: 'DEFLATE'}) // 获取插件
-                    .then(function (pluginBuffer) {
-                        _this.getPreSignedUrl('plugin').then(res => {
-                            _this.uploadPreSignedUrl(res.data, pluginBuffer).then(res => {
-                                console.log('plugin')
-                                _this.addPlugin(config);
-                            }).catch(error => {
-                                _this._writeLog(error)
-                            })
-                        }).catch(error => {
-                            _this._writeLog(error)
-                        });
+                    .then((packageBuffer) => {
+                        let data = {
+                                'config': config,
+                                'package': packageBuffer,
+                                'icon': iconBuffer
+                            },
+                            url = this.host + '/lemix/upload';
+                        this.$http.put(url, JSON.stringify(data)).then(res => {
+                            let id = res.data.mmv_identifier;
+                            this.iconPath = res.data.icon_path
+                            this.getDownloadUrl(id)
+                        }).catch(err => {
+                            console.log(err.response.data);
+                        })
                     })
             }
             ,
@@ -508,14 +538,25 @@
              * @param package_time
              */
             getDownloadUrl(pkid, package_time) {
-                let url = this.host + ':' + this.port + '/base/plugin/action/get-temp-url?pkid=' + pkid + '&package_time=' + package_time;
-                this.$http.get(url).then(res => {
-                    this.downloadUrl = res.data;// 临时下载路径，生成二维码
-                    this.dialogVisible = true;
-                }).catch(error => {
-                    console.log(error);
-                    this._writeLog(error);
-                })
+                /**
+                 * 更新描述
+                 * 由原来获取下载路径生成二维码
+                 * 改为将获取版本信息和下载路径的接口（下文的url）生成二维码
+                 * 扫描二维码直接返回
+                 * 包含版本信息和下载地址的Json
+                 */
+                let url = this.host + '/lemix/moduleVersion?mmv_identifier=' + pkid;
+                this.dialogVisible = true;
+                this.downloadUrl = url;
+                // 暂时搁置
+                // let url = this.host + ':' + this.port + '/base/plugin/action/get-temp-url?pkid=' + pkid + '&package_time=' + package_time;
+                // this.$http.get(url).then(res => {
+                //     this.downloadUrl = JSON.stringify(res.data.ext_list[0]);// 临时下载路径，生成二维码
+                //     this.dialogVisible = true;
+                // }).catch(error => {
+                //     console.log(error);
+                //     this._writeLog(error);
+                // })
             }
             ,
             /**
@@ -526,9 +567,9 @@
                 let codeEle = document.querySelector("#qrCode");
                 this.removeAllChilds();
                 let qrCode = new QRCode(codeEle, {width: 300, height: 300});
-                let iconSrc = this.host + ':31005/' + this.iconPath;
+                // let iconSrc = this.host + ':31005/' + this.iconPath;
+                let iconSrc = this.host + '/lemix/' + this.iconPath
                 let downloadUrl = this.downloadUrl;
-                console.log(downloadUrl);
                 qrCode.makeCode(downloadUrl);
                 this._makeLogo(qrCode, iconSrc);
                 this.dialogLoading = false;
@@ -601,6 +642,33 @@
                         }
                     });
                 }
+            },
+            complete(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.dialogFormVisible = false;
+                        let projectPath = this.projectPath,
+                            config = this.getConfig(projectPath),
+                            source = {
+                                'entrance': this.form.entrance,
+                                'description': this.form.description
+                            };
+                        Object.assign(config, source)
+                        fs.writeFileSync(projectPath + '/config/config.json', JSON.stringify(config), 'utf-8')
+                        this.buildProject(this.upLoadZip);
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            closed() {
+                this.$refs['form'].resetFields()
+            },
+            isNewProject() {
+                let projectPath = this.projectPath;
+                const config = this.getConfig(projectPath);
+                return (!config.description || !config.entrance)
             }
         }
         ,

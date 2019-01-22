@@ -1,5 +1,5 @@
 <template>
-    <el-container v-loading="loading" element-loading-text="正在创建项目...">
+    <el-container v-loading="loading" element-loading-text="正在创建项目..." id="mainLayout">
         <el-aside>
             <div id="header">
                 <img src="../../../static/images/lemon-it-logo.png" alt="">
@@ -42,6 +42,43 @@
                 </li>
             </ul>
         </el-main>
+        <el-dialog title="Please input configuration" :visible.sync="dialogFormVisible" width="60%" @closed="closed()">
+            <el-form ref="form" :model="form" :rules="rules" label-position="left">
+                <el-form-item label="projectName" :label-width="formLabelWidth" prop="projectName"
+                              :inline-message="isInline">
+                    <el-input v-model="form.projectName" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="namespace" :label-width="formLabelWidth" prop="namespace"
+                              :inline-message="isInline">
+                    <el-select v-model="form.namespace" placeholder="please choose namespace" size="mini">
+                        <el-option
+                                v-for="item in namespace"
+                                :key="item.ns_identifier"
+                                :label="item.ns_name"
+                                :value="item.ns_identifier"
+                        >
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="identifier" :label-width="formLabelWidth" prop="identifier"
+                              :inline-message="isInline">
+                    <el-input v-model="form.identifier" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="name" :label-width="formLabelWidth" prop="name" :inline-message="isInline">
+                    <el-input v-model="form.name" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="description" :label-width="formLabelWidth" prop="description"
+                              :inline-message="isInline">
+                    <el-input v-model="form.description" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="author" :label-width="formLabelWidth" prop="author" :inline-message="isInline">
+                    <el-input v-model="form.author" autocomplete="off" size="mini"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="complete('form')">确 定</el-button>
+            </div>
+        </el-dialog>
     </el-container>
 </template>
 
@@ -53,90 +90,57 @@
         name: "mainLayout",
         data() {
             return {
-                dialogVisible: false,
                 projectList: [],
                 test: {},
                 loading: false,
                 flag: '',
-                templatePath: ''
+                templatePath: '',
+                form: {
+                    'projectName': '',
+                    'namespace': '',
+                    'identifier': '',
+                    'name': '',
+                    'description': '',
+                    'author': ''
+                },
+                dialogFormVisible: false,
+                formLabelWidth: '90px',
+                projectPath: '',
+                projectName: '',
+                namespace: [],
+                host: 'http://192.168.11.203:8082',
+                createPath: '',
+                isInline: true,
+                rules: {
+                    projectName: [
+                        {required: true, message: 'Please input projectName', trigger: 'blur'},
+                    ],
+                    namespace: [
+                        {required: true, message: 'Please choose namespace', trigger: 'change'},
+                    ],
+                    identifier: [
+                        {required: true, message: 'Please input identifier', trigger: 'blur'},
+                    ],
+                    name: [
+                        {required: true, message: 'Please input name', trigger: 'blur'},
+                    ],
+                    description: [
+                        {required: true, message: 'Please input description', trigger: 'blur'},
+                    ],
+                    author: [
+                        {required: true, message: 'Please input author', trigger: 'blur'},
+                    ]
+                }
             }
         },
         methods: {
-            /**
-             * dialog opened 回调
-             */
-            // makeQRCode() {
-            //     this.loading = true;
-            //     let codeEle = document.querySelector("#qrcode");
-            //     this.removeAllChilds();
-            //     let qrcode = new QRCode(codeEle, {width: 300, height: 300});
-            //     let src = "static/images/logo.png";
-            //     let randomString = this.randomString(64);
-            //     qrcode.makeCode(randomString);
-            //     this._makeLogo(qrcode, src);
-            //     this.loading = false;
-            // },
-            /**
-             * 清除已存在的二维码
-             */
-            // removeAllChilds() {
-            //     let codeEle = document.querySelector("#qrcode");
-            //     while (codeEle.hasChildNodes()) //当elem下还存在子节点时 循环继续
-            //     {
-            //         codeEle.removeChild(codeEle.firstChild);
-            //     }
-            // },
-            /**
-             * 生成随机字符串
-             * @param len
-             * @returns {string}
-             */
-            // randomString(len) {
-            //     len = len || 32;
-            //     let $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            //     let maxPos = $chars.length;
-            //     let randomString = '';
-            //     for (let i = 0; i < len; i++) {
-            //         randomString += $chars.charAt(Math.floor(Math.random() * maxPos));
-            //     }
-            //     return randomString;
-            // },
-            /**
-             * 遍历文件
-             */
-            // readDir(path) {
-            //     let _this = this;
-            //     fs.readdir(path, function (err, menu) {
-            //         if (!menu)
-            //             return;
-            //         menu.forEach(function (ele) {
-            //             fs.stat(path + "\\" + ele, function (err, info) {
-            //                 if (info && info.isDirectory()) {
-            //                     console.log("dir: " + ele)
-            //                     _this.readDir(path + "\\" + ele);
-            //                 } else {
-            //                     console.log("file: " + ele)
-            //                 }
-            //             })
-            //         })
-            //     })
-            // },
-            /**
-             * 批处理
-             */
-            // callBat() {
-            //     let current_path = path.join(__dirname);
-            //     let current_path_array = current_path.split("\\");
-            //     current_path_array.splice(-4, 4);
-            //     let absolute_path = current_path_array.join("\\");
-            //     this._callBat("test.bat", null, {cwd: absolute_path})
-            // },
             /**
              * 打开项目
              */
             selectFile() {
                 let file_input = document.querySelector("#file");
                 this.flag = 'open';
+                file_input.value = '';
                 file_input.click();
             },
             /**
@@ -145,32 +149,25 @@
             createProject() {
                 let file_input = document.querySelector("#file");
                 this.flag = 'create';
+                file_input.value = '';
                 file_input.click();
             },
             /**
-             * 监听input
+             * 监听input_file
              */
             fileInputListener() {
                 let file_input = document.querySelector("#file");
                 let _this = this;
                 file_input.addEventListener("change", function () {
-                    if (this.files.length > 0) {
+                    if (file_input.files.length > 0) {
                         if (_this.flag === 'open') {
-                            let projectPath = this.files[0].path;
+                            let projectPath = file_input.files[0].path;
                             let projectName = projectPath.split("\\").splice(-1).toString();
                             _this.projectList.push({"name": projectName, "path": projectPath});
                         } else if (_this.flag === 'create') {
-                            let createPath = this.files[0].path;
-                            _this.inputDirName().then(({value}) => {
-                                _this.loading = true;
-                                let projectPath = createPath + '\\' + value;
-                                _this.readTemp(projectPath);
-                                let projectName = value.toString();
-                                _this.projectList.push({"name": projectName, "path": projectPath});
-                                _this.loading = false;
-                            }).catch(error => {
-                                _this._writeLog(error)
-                            })
+                            _this.createPath = file_input.files[0].path;
+                            _this.dialogFormVisible = true;
+                            _this.getNamespace();
                         }
                     }
                 });
@@ -260,7 +257,9 @@
                         let temp = JSON.parse(fr);
                         this.create(temp, projectPath);
                         // 将新创建的项目添加到项目列表
+                        this.projectList.push({"name": this.projectName, "path": projectPath})
                     }
+
                 })
             },
             /**
@@ -281,13 +280,59 @@
                             let buffer = fs.readFileSync(this.templatePath + '/index.html');
                             fs.writeFileSync(cPath, buffer)
                         } else if (sub.name === 'config.json' && path.split('\\').pop() === 'config') {
-                            let buffer = fs.readFileSync(this.templatePath + '/config.json');
-                            fs.writeFileSync(cPath, buffer);
+                            let configuration = fs.readFileSync(this.templatePath + '/config.json', 'utf-8'),
+                                configObj = JSON.parse(configuration),
+                                config = {
+                                    "identifier": this.form.identifier,
+                                    "name": this.form.name,
+                                    "author": this.form.author
+                                };
+                            Object.assign(configObj, config)
+                            fs.writeFileSync(cPath, JSON.stringify(configObj), 'utf-8');
+                        } else if (sub.name === 'icon.png') {
+                            let buffer = fs.readFileSync(this.templatePath + '/icon.png');
+                            fs.writeFileSync(cPath, buffer)
                         } else {
                             fs.writeFileSync(cPath, "");
                         }
                     }
                 }
+            },
+            complete(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.dialogFormVisible = false;
+                        this.projectPath = this.createPath + '\\' + this.form.projectName;
+                        this.projectName = this.form.projectName;
+                        let param = {
+                            "ns_identifier": this.form.namespace,
+                            "mm_name": this.form.name,
+                            "bundle_identifier": this.form.identifier,
+                            "mm_description": this.form.description
+                        }, url = this.host + '/lemix/module';
+                        this.$http.post(url, JSON.stringify(param)).then(res => {
+                            console.log(res);
+                            this.readTemp(this.projectPath);
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            getNamespace() {
+                let url = this.host + '/lemix/nameSpace';
+                this.$http.get(url).then(res => {
+                    console.log(res);
+                    this.namespace = res.data
+                }).catch(err => {
+                    console.log(err);
+                })
+            },
+            closed(){
+                this.$refs['form'].resetFields()
             }
         },
         mounted() {
@@ -421,5 +466,26 @@
     .projectList .close:hover {
         transform: rotate(360deg);
         transition: all 0.5s ease;
+    }
+</style>
+<style>
+    #mainLayout .el-dialog {
+        background-color: #353535;
+    }
+
+    #mainLayout .el-dialog .el-dialog__title {
+        color: #ffffff;
+    }
+
+    #mainLayout .el-dialog .el-form-item__label {
+        color: #ffffff !important;
+    }
+
+    #mainLayout .el-input {
+        width: 200px;
+    }
+
+    #mainLayout .el-form-item {
+        margin-bottom: 0;
     }
 </style>

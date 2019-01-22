@@ -2,7 +2,9 @@
     "name": "config",
     "children": [{
         "name": "config.json"
-      }]
+      },{
+        "name":"icon.png"
+    }]
 }, {
     "name": "pages",
     "children": [{
