@@ -3,7 +3,6 @@ import {Message} from 'element-ui';
 
 const instance = axios.create({
     headers: {
-        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIiwiend0LWJhc2Utc2VydmljZSJdLCJleHAiOjE1NDY1MjgxOTEsInVzZXJfbmFtZSI6Inh1eGluIiwianRpIjoiOTA4NTEzMjYtNWY3NS00YzM0LWFkYjktNzc5MWMwNjIxOGUyIiwiY2xpZW50X2lkIjoiYXR0ZW5kYW5jZS1zZXJ2aWNlIiwic2NvcGUiOlsidHJ1c3RlZCJdfQ.MT92RKOWZWOw5oKbY7vXqKbSZMXOvsn439uZQf76ZXeLZm1y8q6Xtl0UfDlBFadUMt9ZBf2MDYq3nB8cl13V5LrqZYP3b-FgvJnGS1YIh2Gm98XZPdSaiNe5j0EnYZqUr_TKqB_0HyvhXC1Ms1i6V9kk8PsZrViuprBObH-E1pk',
         'Content-Type': 'application/json'
     },
     defaults: {
