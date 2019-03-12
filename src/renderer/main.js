@@ -18,7 +18,6 @@ Vue.config.productionTip = false
 Vue.prototype._makeLogo = makeLogo
 Vue.prototype._callBat = callBat
 Vue.prototype._writeLog = writeLog
-// Vue.prototype._extractAll = asar.default.extractAll
 
 /* eslint-disable no-new */
 new Vue({

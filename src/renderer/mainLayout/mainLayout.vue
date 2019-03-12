@@ -7,7 +7,7 @@
             </div>
             <ul>
                 <li>
-                    <el-button @click="createProject()">Creat new Lemix Project</el-button>
+                    <el-button>Creat new Lemix Project</el-button>
                 </li>
                 <li>
                     <el-button @click="selectFile()">Open an exists Lemix Project</el-button>
@@ -42,7 +42,7 @@
                 </li>
             </ul>
         </el-main>
-        <el-dialog title="Please input configuration" :visible.sync="dialogFormVisible" width="60%" @closed="closed()">
+        <el-dialog title="Please input configuration" :visible.sync="dialogFormVisible" width="50%" @closed="closed()">
             <el-form ref="form" :model="form" :rules="rules" label-position="left">
                 <el-form-item label="projectName" :label-width="formLabelWidth" prop="projectName"
                               :inline-message="isInline">
@@ -331,7 +331,7 @@
                     console.log(err);
                 })
             },
-            closed(){
+            closed() {
                 this.$refs['form'].resetFields()
             }
         },
