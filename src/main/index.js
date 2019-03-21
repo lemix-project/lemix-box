@@ -1,14 +1,63 @@
 import {app, BrowserWindow, ipcMain} from 'electron'
+import utils from '../../static/utils'
 
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
+
+/**
+ * 绑定‘SEND_MESSAGE’事件，用于和webview通信
+ * create by Promi5e 2019-03-13 16:41
+ */
+ipcMain.on('SEND_MESSAGE_ASYNC', (event, message) => {
+  const messageObject = JSON.parse(message)
+  if (messageObject.type.split('.')[0] === 'net') {
+    let params = messageObject.params
+    let fn = utils.common.fn.getFn(messageObject.type)
+    fn(params).then(res => {
+      event.returnValue = JSON.stringify(Object.assign(res.data, {success: true}))
+    }).catch(err => {
+      event.returnValue = JSON.stringify(Object.assign(err.response.data, {success: false}))
+    })
+  } else {
+    // 分发消息
+    mainWindow.webContents.send('WEB_VIEW_HANDLE', message)
+    event.returnValue = null
+  }
+
+})
+
+ipcMain.on('SEND_MESSAGE_SYNC', async (event, message) => {
+  const messageObject = JSON.parse(message)
+  /**
+   * 需要判断是否需要界面操作，如style，navigation，statusBar 等
+   * ----判断方式未确定----
+   * 需要页面操作的要跳转到渲染进程 ipcRenderer
+   */
+  if (messageObject.type.split('.')[0] === 'net') {
+    let params = messageObject.params
+    let fn = utils.common.fn.getFn(messageObject.type)
+    // const res = await fn(params)
+    // console.log(res.data)
+    fn(params).then(res => {
+      console.log(`res:${res.data}`);
+      event.sender.send('LOAD_CALLBACK', [params.success, JSON.stringify(res.data)])
+    }).catch(err => {
+      console.log(err.response);
+      event.sender.send('LOAD_CALLBACK', [params.failed, JSON.stringify(err.response.data)])
+    })
+  } else {
+    // 分发消息
+    mainWindow.webContents.send('WEB_VIEW_HANDLE', message)
+  }
+})
+
 if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow, newWindow
+let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`

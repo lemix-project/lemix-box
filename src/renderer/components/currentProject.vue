@@ -103,8 +103,7 @@
         <el-button type="primary" @click="complete('form')" size="mini">确 定</el-button>
       </div>
     </el-dialog>
-    <!--<webview id="foo" nodeintegration></webview>-->
-    <div id="box" style="height: 543px; width: 300px; overflow: hidden; position: relative"></div>
+    <div id="box"></div>
   </el-container>
 </template>
 
@@ -115,8 +114,9 @@
   import FileSaver from 'file-saver'
   import QRCode from 'qrcodejs2'
   import chokidar from 'chokidar'
-  import utils from '../build/index'
-  import {ipcRenderer, ipcMain} from 'electron'
+  import Build from '../build/index'
+  import {ipcRenderer} from 'electron'
+  import utils from '../../../static/utils'
 
   export default {
     name: "currentProject",
@@ -156,10 +156,6 @@
         dialogFormVisible: false,
         formLabelWidth: '90px',
         isInline: true,
-        map:{
-          '__TYPE.UI.NAVIGATION.PUSH': 'navigationPush',
-          '__TYPE.UI.NAVIGATION.PRESENT': 'navigationPresent'
-        }
       }
     },
     methods: {
@@ -284,7 +280,7 @@
         } else {
           pluginPath = "static/build/index.js";
         }
-        utils.build(projectPath, buildPath);
+        Build.build(projectPath, buildPath);
         callback(buildPath);
         // this.removeDir(buildPath);
         this.loading = false;
@@ -704,61 +700,15 @@
         }
       },
       runMix(buildPath) {
-        // const htmlSource = 'file://F:/git/zhongwang/lemix-box/projectDist/pages/main/index.html'
-        // const htmlSource = buildPath + '/pages/main/index.html'
-        const box = document.querySelector('#box')
-        const webView = document.createElement('webview')
-        webView.style.height = '543px'
-        webView.style.position = 'absolute'
-        webView.style.border = '1px solid #eee'
-        webView.setAttribute('src', 'file:///F:/git/zhongwang/lemix-electron/dist/index.html')
-        webView.setAttribute('preload', 'file:///F:/git/zhongwang/lemix-box/static/test.js')
-        box.appendChild(webView)
-        webView.addEventListener('dom-ready', () => {
-          webView.openDevTools()
-          webView.send('webParent', 'renderer to webView')
-        })
-        webView.addEventListener('ipc-message', (event) => {
-          let channel = JSON.parse(event.channel)
-          // console.log(event.channel,channel)
-          let data = {
-            url: 'file:///F:/git/zhongwang/lemix-electron/dist/'+channel.params.aim,
-            parentEle: box
-          }
-          this[this.map[channel.type]](data)
-        })
-      },
-      navigationPush({url, parentEle}) {
-        const newWebView = document.createElement('webview')
-        newWebView.setAttribute('src', url)
-        newWebView.style.cssText = 'height:543px;border:1px solid #eee;position:absolute;left:300px'
-        newWebView.setAttribute('preload', 'file:///F:/git/zhongwang/lemix-box/static/test.js')
-        parentEle.appendChild(newWebView)
-        newWebView.addEventListener('dom-ready', () => {
-          newWebView.openDevTools()
-          let timer = setInterval(() => {
-            if(newWebView.offsetLeft === 0){
-              clearInterval(timer)
-            }else{
-              newWebView.style.left = newWebView.offsetLeft - 10 + 'px'
-            }
-          },10)
-        })
-      },
-      navigationPresent({url,parentEle}){
-        const newWebView = document.createElement('webview')
-        newWebView.setAttribute('src', url)
-        newWebView.style.cssText = 'height:543px;border:1px solid #eee;position:absolute;top:543px'
-        // webView.setAttribute('preload', 'file:///F:/git/zhongwang/lemix-box/static/test.js')
-        parentEle.appendChild(newWebView)
-        newWebView.addEventListener('dom-ready', () => {
-          let timer = setInterval(() => {
-            if(newWebView.offsetLeft === 0){
-              clearInterval(timer)
-            }else{
-              newWebView.style.left = newWebView.offsetTop - 10 + 'px'
-            }
-          },10)
+        const ele = document.querySelector('#box')
+        const src = `file:///${buildPath}/pages/main/index.html`
+        const preload = `file:///${buildPath}/../static/lemix-electron.min.js`
+        const webView = utils.webView.manage.create({ele, src, preload})
+        ipcRenderer.on('WEB_VIEW_HANDLE', (event, message) => {
+          let messageObject = JSON.parse(message)
+          let params = Object.assign(messageObject.params, {'webView': webView})
+          let fn = utils.common.fn.getFn(messageObject.type)
+          fn(params)
         })
       }
     }
@@ -902,6 +852,30 @@
   .push {
     animation: mymove;
     -webkit-animation: mymove
+  }
+
+  #box {
+    height: 543px;
+    width: 300px;
+    overflow: hidden;
+    position: relative
+  }
+
+  #box #navigation {
+    display: block;
+    height: 40px;
+    background-color: #007aff;
+    text-align: center;
+    line-height: 40px
+  }
+
+  #box #navigation .go-back {
+    position: absolute;
+    left: 0;
+    top: 3px;
+    background-color: transparent;
+    border: none;
+    color: black;
   }
 </style>
 
