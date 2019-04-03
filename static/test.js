@@ -1,22 +1,22 @@
-const {ipcRenderer, remote} = require('electron')
-ipcRenderer.on('webParent', (e, message) => {
+const {ipcRenderer} = require('electron')
 
-})
 window.__send_message = (type, parameters, isSync) => {
   let data = JSON.stringify({
     type: type,
     params: parameters,
     sync: isSync
   })
-  console.log(data)
-  ipcRenderer.sendToHost(data)
+  // 与主进程通信
+  const res = ipcRenderer.sendSync('SEND_MESSAGE', data)
+  console.log(res);
 }
+
 window.$lemix = {
   ui: {
     navigation: {
       push: (type, aim, config) => {
         __send_message(
-          '__TYPE.UI.NAVIGATION.PUSH',
+          'ui.navigation.push',
           {
             aim: aim,
             type: type,
@@ -24,14 +24,23 @@ window.$lemix = {
           }
         )
       },
-      present: (type, aim, config) => {
+      pop: (layer) => {
         __send_message(
-          '__TYPE.UI.NAVIGATION.PRESENT',
+          'ui.navigation.pop',
           {
-            aim: aim,
-            type: type,
-            config: config
+            layer: layer
           }
+        )
+      }
+    }
+  },
+  net: {
+    http: {
+      asyncRequest: (config) => {
+        let hConfig = __handle_config(config)
+        __send_message(
+          __TYPE.NET.HTTP.ASYNC_REQUEST,
+          hConfig
         )
       }
     }

@@ -1,4 +1,5 @@
 const setNavigationBarHidden = (params) => {
+  console.log(params);
   let isHidden = params.isHidden
   let navigationBar = __getNavigationBar(params.webView)
   navigationBar.style.display = isHidden

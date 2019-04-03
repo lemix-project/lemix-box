@@ -1,5 +1,8 @@
+const {ipcRenderer} = require('electron')
+
 // 定位一次
-const getPosition = () => {
+const getPosition = async () => {
+  let result = ''
   window.onLoad  = function(){
     var map = new AMap.Map('container');
     map.plugin('AMap.Geolocation', function() {
@@ -10,9 +13,9 @@ const getPosition = () => {
         timeout: 10000,
         // 定位按钮的停靠位置的偏移量，默认：Pixel(10, 20)
         buttonOffset: new AMap.Pixel(10, 20),
-        //  定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+        // 定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
         zoomToAccuracy: true,
-        //  定位按钮的排放位置,  RB表示右下
+        // 定位按钮的排放位置,  RB表示右下
         buttonPosition: 'RB'
       })
 
@@ -21,12 +24,13 @@ const getPosition = () => {
       AMap.event.addListener(geolocation, 'error', onError)
 
       function onComplete (data) {
-        console.log(data);
+        console.log(data)
+        result = data
         // data是具体的定位信息
       }
 
       function onError (data) {
-        console.log(data);
+        console.log(data)
         // 定位出错
       }
     })
@@ -35,7 +39,8 @@ const getPosition = () => {
   const jsapi = document.createElement('script');
   jsapi.charset = 'utf-8';
   jsapi.src = url;
-  document.head.appendChild(jsapi);
+  document.head.appendChild(jsapi)
+  return result
 }
 
 // 即时定位（打开）

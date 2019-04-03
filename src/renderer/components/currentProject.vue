@@ -116,7 +116,7 @@
   import chokidar from 'chokidar'
   import Build from '../build/index'
   import {ipcRenderer} from 'electron'
-  import utils from '../../../static/utils'
+  import lemix from '../../../static/lemix'
 
   export default {
     name: "currentProject",
@@ -696,26 +696,27 @@
         if (this.isNewProject()) {
           this.dialogFormVisible = true
         } else {
-          this.buildProject(this.runMix);
+          this.buildProject(this.runMix)
         }
       },
       runMix(buildPath) {
         const ele = document.querySelector('#box')
         const src = `file:///${buildPath}/pages/main/index.html`
         const preload = `file:///${buildPath}/../static/lemix-electron.min.js`
-        const webView = utils.webView.manage.create({ele, src, preload})
-        ipcRenderer.on('WEB_VIEW_HANDLE', (event, message) => {
+        const webView = lemix.webView.manage.create({ele, src, preload})
+        ipcRenderer.on('MAIN_TO_RENDER', (event, message) => {
           let messageObject = JSON.parse(message)
           let params = Object.assign(messageObject.params, {'webView': webView})
-          let fn = utils.common.fn.getFn(messageObject.type)
+          let fn = lemix.common.fn.getFn(messageObject.type)
           fn(params)
+          console.log(params)
         })
       }
     }
     ,
     mounted() {
-      this.init();
-      this.watchFileTrees();
+      this.init()
+      this.watchFileTrees()
     }
   }
 </script>

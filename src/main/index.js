@@ -1,5 +1,5 @@
 import {app, BrowserWindow, ipcMain} from 'electron'
-import utils from '../../static/utils'
+import lemix from '../../static/lemix'
 
 /**
  * Set `__static` path to static files in production
@@ -14,7 +14,7 @@ ipcMain.on('SEND_MESSAGE_ASYNC', (event, message) => {
   const messageObject = JSON.parse(message)
   if (messageObject.type.split('.')[0] === 'net') {
     let params = messageObject.params
-    let fn = utils.common.fn.getFn(messageObject.type)
+    let fn = lemix.common.fn.getFn(messageObject.type)
     fn(params).then(res => {
       event.returnValue = JSON.stringify(Object.assign(res.data, {success: true}))
     }).catch(err => {
@@ -22,7 +22,7 @@ ipcMain.on('SEND_MESSAGE_ASYNC', (event, message) => {
     })
   } else {
     // 分发消息
-    mainWindow.webContents.send('WEB_VIEW_HANDLE', message)
+    mainWindow.webContents.send('MAIN_TO_RENDER', message)
     event.returnValue = null
   }
 
@@ -37,7 +37,7 @@ ipcMain.on('SEND_MESSAGE_SYNC', async (event, message) => {
    */
   if (messageObject.type.split('.')[0] === 'net') {
     let params = messageObject.params
-    let fn = utils.common.fn.getFn(messageObject.type)
+    let fn = lemix.common.fn.getFn(messageObject.type)
     // const res = await fn(params)
     // console.log(res.data)
     fn(params).then(res => {
@@ -49,7 +49,7 @@ ipcMain.on('SEND_MESSAGE_SYNC', async (event, message) => {
     })
   } else {
     // 分发消息
-    mainWindow.webContents.send('WEB_VIEW_HANDLE', message)
+    mainWindow.webContents.send('MAIN_TO_RENDER', message)
   }
 })
 
