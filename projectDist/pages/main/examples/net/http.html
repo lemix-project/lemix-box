@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Http</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+  <link rel="stylesheet" href="../../lib/css/mui.min.css">
+  <script src="../../lemix.min.js"></script>
+  <script src="../../lib/js/mui.min.js"></script>
+</head>
+<body>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="httpSyncGet('success')"
+>
+  sync_get
+</button>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="httpSyncGet('failed')">
+  sync_get_failed
+</button>
+<hr/>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="httpSyncPost()">
+  sync_post
+</button>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="httpAsync()">
+  async_list
+</button>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="uploadFile()">
+  upload
+</button>
+<button type="button"
+        data-loading-icon="mui-spinner mui-spinner-custom"
+        class="mui-btn mui-btn-primary"
+        onclick="downloadFile()">
+  download
+</button>
+<hr/>
+<div>success:</div>
+<textarea name="" id="success" cols="30" rows="10"></textarea>
+<div>failed:</div>
+<textarea name="" id="failed" cols="30" rows="10"></textarea>
+<img id="imgUrl" src="" alt="">
+<script type="text/javascript">
+  let success = document.querySelector("#success")
+  let failed = document.querySelector("#failed")
+  let httpSyncGet = (type) => {
+
+    if (type === "success") {
+      url = "http://192.168.11.129:3385/base/get?name=wang"
+    } else {
+      url = "http://192.168.11.129:3385/base/get22?name=wang"
+    }
+    let result = $lemix.net.http.syncRequest({
+      url: url,
+      method: "GET",
+      header: {
+        "Accept": "*/*"
+      },
+      body: "",
+    })
+    // res.innerText = result
+    console.log(result);
+    let resultJson = JSON.parse(result)
+    if (resultJson.success) {
+      success.innerText = result
+    } else {
+      failed.innerText = result
+    }
+    alert(resultJson.success)
+  }
+
+  let httpSyncPost = () => {
+
+    let result = $lemix.net.http.syncRequest({
+      url: "http://192.168.11.203:8082/lemix/nameSpace",
+      method: "POST",
+      header: {
+        "Accept": "*/*",
+        "Content-Type": "application/json;charset=utf-8"
+      },
+      body: JSON.stringify({
+        "ns_name": "wang",
+        "ns_description": 'description'
+      })
+    })
+    let resultJson = JSON.parse(result)
+    if (resultJson.success) {
+      success.innerText = result
+    } else {
+      failed.innerText = result
+    }
+  }
+
+  let httpAsync = () => {
+
+    $lemix.net.http.asyncRequest({
+      url: "http://192.168.11.129:3385/base/list",
+      method: "GET",
+      header: {
+        "Accept": "*/*"
+      },
+      body: "",
+      success: function (data) {
+
+        success.innerText = data.toString()
+      },
+      failed: function (error) {
+        console.log(error);
+        failed.innerText = error.toString()
+      }
+    })
+  }
+
+  let uploadFile = () => {
+
+    $lemix.image.camera.openCamera({
+      mode: 'photo',
+      theme: "#ff000000",
+      maxLength: "20",
+      success(result) {
+        // document.querySelector("#imgUrl").src = result
+        $lemix.net.http.uploadFile({
+          url: "http://192.168.11.129:3385/file/upload",
+          method: "POST",
+          header: {
+            "Accept": "*/*"
+          },
+          fileKey: result[0],
+          success: function (data) {
+            success.innerText = "success:" + data
+          },
+          failed: function (error) {
+            failed.innerText = "error:" + error
+          }
+        })
+      },
+      failed(error) {
+
+        failed.innerText = "error:" + error
+      }
+    })
+
+  }
+
+  let downloadFile = () => {
+    $lemix.net.http.downloadFile({
+      url: "http://static.lemonsoft.net/H5Test.zip",
+      method: "GET    ",
+      header: {
+        "Accept": "*/*"
+      },
+      success: function (data) {
+        success.innerText = "success:" + data
+      },
+      failed: function (error) {
+        failed.innerText = "error:" + error
+      }
+    })
+  }
+
+  let loading = (elem) => {
+    mui(elem).button('loading') //切换为loading状态
+  }
+
+  let reset = (elem) => {
+    mui(elem).button('reset')   //重置
+  }
+</script>
+</body>
+</html>

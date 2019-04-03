@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Navigation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="../../lib/css/mui.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.21.1/babel.min.js"></script>
+    <script src="../../lib/js/mui.min.js"></script>
+    <!--<script src="../../lemix.min.js"></script>-->
+</head>
+<body>
+<div class="mui-switch">
+    <div class="mui-switch-handle"></div>
+</div>
+<form class="mui-input-group" name="getInput">
+    <div class="mui-input-row">
+        <input type="text" class="mui-input-clear" placeholder="请输入" name="name" value="http://www.baidu.com">
+    </div>
+    <div class="mui-button-row">
+        <button type="button" class="mui-btn mui-btn-primary" id="subBtn">absolute确认</button>
+    </div>
+</form>
+<form class="mui-input-group" name="getInputs">
+    <div class="mui-input-row">
+        <input type="text" class="mui-input-clear" placeholder="请输入" name="names" value="navigation2.html">
+    </div>
+    <div class="mui-button-row">
+        <button type="button" class="mui-btn mui-btn-primary" id="subBtns">push确认</button>
+    </div>
+</form>
+<form class="mui-input-group" name="closeForm">
+    <div class="mui-input-row">
+        <input type="text" class="mui-input-clear" placeholder="请输入" name="closeName" value="navigation3.html">
+    </div>
+    <div class="mui-button-row">
+        <button type="button" class="mui-btn mui-btn-primary" id="closeBtn">present确认</button>
+    </div>
+</form>
+<form class="mui-input-group" name="presentForm">
+    <div class="mui-input-row">
+        <input type="text" class="mui-input-clear" placeholder="请输入" name="presentName" value="user.profile">
+    </div>
+    <div class="mui-button-row">
+        <button type="button" class="mui-btn mui-btn-primary" id="presentBtn">确认</button>
+    </div>
+</form>
+<script type="text/babel">
+  console.log($lemix);
+  document.querySelector(".mui-switch").addEventListener("toggle", function (event) {
+        $lemix.ui.style.setNavigationBarHidden(event.detail.isActive)
+    })
+
+    var btn = document.getElementById("subBtn")
+    btn.addEventListener("click", function () {
+        var inputValue = getInput.name.value
+        let config = {
+            "navigationHidden": false,
+            "navigationBackgroundColor": "#abcdef",
+            "navigationItemColor": "#666666",
+            "navigationTitle": "hello",
+            "statusBarHidden": false,
+            "statusBarStyle": "light"
+        }
+
+        $lemix.ui.navigation.push('absolute', inputValue, config)
+    })
+
+    let btns = document.getElementById("subBtns")
+    btns.addEventListener("click", function () {
+        let inputValue = getInputs.names.value
+        let config = {
+            "navigationHidden": false,
+            "navigationBackgroundColor": "#abcdef",
+            "navigationItemColor": "#666666",
+            "navigationTitle": "hello",
+            "statusBarHidden": false,
+            "statusBarStyle": "light"
+        }
+        $lemix.ui.navigation.push('relative', inputValue, config)
+    })
+    let closebtn = document.getElementById("closeBtn")
+    closebtn.addEventListener("click", function () {
+        let inputValue = closeForm.closeName.value
+        let config = {
+            "navigationHidden": false,
+            "navigationBackgroundColor": "#abcdef",
+            "navigationItemColor": "#666666",
+            "navigationTitle": "hello",
+            "statusBarHidden": false,
+            "statusBarStyle": "light"
+        }
+
+        $lemix.ui.navigation.present('relative', inputValue, config)
+    })
+    let presentBtn = document.getElementById("presentBtn")
+    presentBtn.addEventListener("click", function () {
+        let inputValue = presentForm.presentName.value
+        $lemix.ui.navigation.push('native', inputValue)
+    })
+
+
+</script>
+</body>
+</html>

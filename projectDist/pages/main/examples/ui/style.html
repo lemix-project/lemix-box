@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="../../lib/css/mui.min.css">
+    <style type="text/css">
+        body {
+            padding: 10px;
+        }
+
+        .deepskyblue {
+            background-color: deepskyblue;
+        }
+
+        .green {
+            background-color: green;
+        }
+
+        .rebeccapurple {
+            background-color: rebeccapurple;
+        }
+        .mui-row{
+            margin: 6px 0;
+        }
+        .switch{
+            height: 30px;
+            line-height: 30px;
+        }
+        .red{
+            background-color: #FF0000;
+        }
+        .pink{
+            background-color: #FFC0CB;
+        }
+        .blue{
+            background-color: #0000FF;
+        }
+    </style>
+    <script src="../../lib/js/mui.min.js"></script>
+    <script src="../../lemix.min.js"></script>
+</head>
+<body>
+<div class="mui-content">
+    <div class="mui-row">
+        <div class="mui-col-xs-4 switch">NavigationBarHidden:</div>
+        <div class="mui-col-sm-6 mui-col-xs-6">
+            <div class="mui-switch navigationBarHidden">
+                <div class="mui-switch-handle"></div>
+            </div>
+        </div>
+    </div>
+    <div class="mui-row">
+        <div class="">BackgroundColor:</div>
+        <ul class="mui-table-view mui-table-view-radio backgroundColor">
+            <li class="mui-table-view-cell mui-selected deepskyblue" id="#00BFFF">
+                <a class="mui-navigate-right">deepskyblue</a>
+            </li>
+            <li class="mui-table-view-cell green" id="#008000">
+                <a class="mui-navigate-right">green</a>
+            </li>
+            <li class="mui-table-view-cell rebeccapurple" id="#663399">
+                <a class="mui-navigate-right">rebeccapurple</a>
+            </li>
+        </ul>
+    </div>
+    <div class="mui-row">
+        <form class="mui-input-group">
+            <div class="mui-input-row">
+                <label>Title:</label>
+                <input id="title" type="text" class="mui-input-clear" placeholder="请输入Title">
+            </div>
+
+        </form>
+        <button id="ok" type="button" class="mui-btn mui-btn-primary">OK</button>
+    </div>
+    <div class="mui-row">
+        <div class="mui-col-xs-4 switch">StatusBarHidden:</div>
+        <div class="mui-col-sm-6 mui-col-xs-6">
+            <div class="mui-switch statusBarHidden">
+                <div class="mui-switch-handle"></div>
+            </div>
+        </div>
+    </div>
+    <div class="mui-row">
+        <div class="mui-col-xs-4 switch">StatusStyle:</div>
+        <div class="mui-col-sm-6 mui-col-xs-6">
+            <div class="mui-switch statusStyle">
+                <div class="mui-switch-handle"></div>
+            </div>
+        </div>
+    </div>
+    <div class="mui-row">
+        <div class="">ItemColor:</div>
+        <ul class="mui-table-view mui-table-view-radio itemColor">
+            <li class="mui-table-view-cell mui-selected red" id="#FF0000">
+                <a class="mui-navigate-right">red</a>
+            </li>
+            <li class="mui-table-view-cell pink" id="#FFC0CB">
+                <a class="mui-navigate-right">pink</a>
+            </li>
+            <li class="mui-table-view-cell blue" id="#0000FF">
+                <a class="mui-navigate-right">blue</a>
+            </li>
+        </ul>
+    </div>
+    <hr>
+    <div class="mui-row">
+        <div class="mui-col-xs-2">Param:</div>
+        <div class="mui-col-xs-8 param"></div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    let param = document.querySelector(".param")
+    let navigationBarHidden = document.querySelector(".navigationBarHidden")
+    let statusBarHidden = document.querySelector(".statusBarHidden")
+    let statusStyle = document.querySelector(".statusStyle")
+    let backgroundColor = document.querySelector('.backgroundColor')
+    let itemColor = document.querySelector('.itemColor')
+    let title = document.querySelector("#title")
+    let btn = document.querySelector("#ok")
+
+    // whether the navigation bar is hidden or not
+    navigationBarHidden.addEventListener("toggle", function (event) {
+        // show the parameter
+        param.innerText = event.detail.isActive
+        $lemix.ui.style.setNavigationBarHidden(event.detail.isActive)
+    })
+
+    statusBarHidden.addEventListener("toggle", function (event) {
+        // show the parameter
+        param.innerText = event.detail.isActive
+        $lemix.ui.style.setStatusBarHidden(event.detail.isActive)
+    })
+
+    statusStyle.addEventListener("toggle", function (event) {
+        // show the parameter
+        let style = new String()
+        if(event.detail.isActive){
+            style = "dark"
+        }else{
+            style = "light"
+        }
+        param.innerText = style
+        $lemix.ui.style.setStatusBarStyle(style)
+    })
+
+    // select the background color
+    backgroundColor.addEventListener('selected', function (e) {
+        // show the parameter
+        param.innerText = e.detail.el.id
+        $lemix.ui.style.setNavigationBackgroundColor(e.detail.el.id)
+    })
+
+    itemColor.addEventListener('selected', function (e) {
+        // show the parameter
+        param.innerText = e.detail.el.id;
+        $lemix.ui.style.setNavigationItemColor(e.detail.el.id);
+    });
+
+    // set title message
+    btn.addEventListener("click", () => {
+        // show the parameter
+        param.innerText = title.value;
+        $lemix.ui.style.setNavigationTitle(title.value)
+    })
+</script>
+</body>
+</html>

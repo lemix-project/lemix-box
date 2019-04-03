@@ -1,0 +1,8 @@
+{
+  "identifier": "com.zhongwang.zwt.ext.attendance",
+  "version": "0.0.1",
+  "description": "忠通考勤打卡模块",
+  "name": "考勤打卡",
+  "author": "zwt-official",
+  "entrance": "main"
+}

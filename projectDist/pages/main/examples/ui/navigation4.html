@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Navigation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="../../lib/css/mui.min.css">
+    <script src="../../lib/js/mui.min.js"></script>
+    <script src="../../lemix.min.js"></script>
+</head>
+<body>
+<div class="mui-switch">
+    <div class="mui-switch-handle"></div>
+</div>
+<form class="mui-input-group" name="getInput">
+    <div class="mui-input-row">
+        <input type="text" class="mui-input-clear" placeholder="请输入" name="name" value="https://www.tmall.com">
+    </div>
+    <div class="mui-button-row">
+        <button type="button" class="mui-btn mui-btn-primary" id="subBtn">确认</button>
+    </div>
+</form>
+<script type="text/javascript">
+    document.querySelector(".mui-switch").addEventListener("toggle",function(event){
+        console.log($lemix);
+        $lemix.ui.style.setNavigationBarHidden(event.detail.isActive)
+        // if(event.detail.isActive){
+        //     console.log("你启动了开关");
+        // }else{
+        //     console.log("你关闭了开关");
+        // }
+    })
+    __onload = function () {
+        // $lemix.ui.style.setNavigationBarHidden(false)
+
+    }
+
+
+    let btn = document.getElementById("subBtn")
+    btn.addEventListener("click", () => {
+        let inputValue = getInput.name.value
+        $lemix.ui.navigation.present('absolute',inputValue)
+    })
+
+
+</script>
+</body>
+</html>

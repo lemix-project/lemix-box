@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Camera</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="../../lib/css/mui.min.css">
+    <link rel="stylesheet" href="../../lib/css/iconfont.css">
+    <script src="../../lib/js/mui.min.js"></script>
+    <style  type="text/css">
+    #content{
+        width: 100%;
+        height: 100%;
+    }
+    #content .location{
+        width: 100%;
+        height: 285px;
+        background-size: 100%;
+        z-index: 1;
+        position: relative;
+        padding-top: 10px;
+    }
+    #content .location .takephoto-view{
+        width: 100%;
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        position: relative;
+    }
+    #content .location .takephoto-view .takephoto{
+        width: 85px;
+        height: 85px;
+        line-height: 85px;
+        text-align: center;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.70);
+    }
+    #content .photo-view{
+        width: 250px;
+        height: 330px;
+        background: #FEFEFE;
+        border: 5px solid #606060;
+        box-shadow: 0 0 1px 0 rgba(255,255,255,0.50);
+        position: absolute;
+        top: 200px;
+        left: 50%;
+        z-index: 2;
+        transform: translate(-50%, 0);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #content .sub-mes{
+        width: 100%;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        position: absolute;
+        top: 550px;
+        padding: 0 20px;
+    }
+    #content .sub-mes .type{
+        background: #5D5D5D;
+        border-radius: 8px;
+        color: #FFFFFF;
+    }
+</style>
+    <script src="../../lib/js/iconfont.js"></script>
+    <script src="../../lemix.min.js"></script>
+</head>
+<body>
+<!--<div id="typeColor">当前主题颜色</div>-->
+<!--<button id="redBtn">红色</button>-->
+<!--<button id="orangeBtn">橙色</button>-->
+<!--<button id="yellowBtn">黄色</button>-->
+<!--<button id="greenBtn">绿色</button>-->
+<!--<button id="blueBtn">蓝色</button>-->
+<!--<div class="mui-input-row mui-input-range">-->
+    <!--<label>Range</label>-->
+    <!--<input type="range" min="10" max="100" id="rangeId">-->
+<!--</div>-->
+<!--<button id="takePhoto">拍照</button>-->
+<!--<button id="takeVideo">录像</button>-->
+<!--<img src="lemage://sandbox/storage/emulated/0/Android/data/com.zhongwang.zwt/camera/photo/9ce15290-f4fb-4b4c-b7bf-4066b7abf579" alt="" id="imgUrl" style="width: 480px;height: 320px;">-->
+<!--<video src="" id="videoUrl"></video>-->
+<!--<div id="resultUrl"></div>-->
+<!--<script type="text/javascript">-->
+    <!--let red , orange , yellow , green , blue-->
+    <!--document.getElementById("redBtn").addEventListener('click',()=>{-->
+        <!--red = document.getElementById("typeColor").style.background = '#CC0000';-->
+    <!--})-->
+    <!--let rangeVal = document.getElementById("rangeId").value-->
+    <!--document.getElementById("takePhoto").addEventListener('click',()=>{-->
+        <!--$lemix.image.camera.openCamera({-->
+            <!--mode: 'photo',-->
+            <!--theme: red,-->
+            <!--maxLength: rangeVal,-->
+            <!--success(result) {-->
+                <!--document.getElementById("imgUrl").src = result-->
+                <!--document.getElementById("resultUrl").innerText = result-->
+            <!--},-->
+            <!--failed(reason) {-->
+
+            <!--}-->
+        <!--})-->
+    <!--})-->
+    <!--document.getElementById("takeVideo").addEventListener('click',()=>{-->
+        <!--$lemix.image.camera.openCamera({-->
+            <!--mode: 'video',-->
+            <!--theme: red,-->
+            <!--maxLength: rangeVal,-->
+            <!--success(result) {-->
+                <!--document.getElementById("videoUrl").src = result-->
+            <!--},-->
+            <!--failed(reason) {-->
+
+            <!--}-->
+        <!--})-->
+    <!--})-->
+<!--</script>-->
+<div id="content">
+    <div class="location">
+        <img src="../../lib/fonts/bg.png" style="width: 100%;height: 100%;position: absolute;top: 0;left: 0;z-index: -1">
+        <div style="width: 100%;height: 25px;line-height: 25px;text-align: center;font-size: 18px;color: #FFFFFF;" id="locationName">定位中...</div>
+        <div style="width: 100%;height: 25px;line-height: 25px;text-align: center;font-size: 14px;color: #C2C2C2;" id="showDateTime"></div>
+        <div class="takephoto-view">
+            <div class="takephoto" id="btn">
+                <i class="iconfont" style="font-size: 40px;color: white">&#xe653;</i>
+            </div>
+        </div>
+    </div>
+    <div class="photo-view">
+        <img src="" alt="" style="width: 100%;height: 100%;position: absolute;top: 0;left: 0;" id="imgUrl">
+        <div style="width: 55px;height: 30px;margin-top: 50px;line-height: 30px;text-align: center">
+            <i class="iconfont" style="font-size: 30px;color: #E9E9E9;">&#xe654;</i>
+        </div>
+        <div style="width: 100%;height: 30px;margin-top: 50px;text-align: center;color: #A2A2A2;">请点击上方拍照按钮进行拍照</div>
+    </div>
+    <div class="sub-mes">
+        <div class="type" id="goback">提交打卡</div>
+    </div>
+</div>
+<script type="text/javascript">
+    __onload = () => {
+        $lemix.map.location.getLocation({
+            success:(lon,lat,formattedAddress)=> {
+                document.getElementById("locationName").innerHTML = formattedAddress
+            },
+            failed:(reason)=>{
+
+            }
+        })
+    }
+    window.onload = function () {
+        var show = document.getElementById("showDateTime");
+        setInterval(function() {
+            var time = new Date();   // 程序计时的月从0开始取值后+1
+            var m = time.getMonth() + 1;
+            var h = time.getHours();
+            if (h < 10) h = "0" + h;
+            var min = time.getMinutes();
+            if (min < 10) min = "0" + min;
+            var sec = time.getSeconds();
+            if (sec < 10) sec = "0" + sec;
+            var t = time.getFullYear() + "年" + m + "月" + time.getDate() + "日" + h  + ":" + min + ":" + sec;
+            show.innerHTML = t;
+        }, 1000);
+    }
+    document.getElementById("btn").addEventListener('click',()=>{
+        $lemix.image.camera.openCamera({
+            mode: 'photo',
+            theme: '#00FF33',
+            maxLength: 5,
+            success:(result)=>{
+                document.getElementById("imgUrl").src = result
+            },
+            failed:(reason)=> {
+
+            }
+        })
+    })
+    document.getElementById('goback').addEventListener('click',()=>{
+        let url = '../map/map.html'
+        $lemix.ui.navigation.pop('relative', url)
+    })
+</script>
+</body>
+</html>

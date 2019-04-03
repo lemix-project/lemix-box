@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Navigation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="../../lib/css/mui.min.css">
+    <script src="../../lib/js/mui.min.js"></script>
+    <script src="../../lemix.min.js"></script>
+</head>
+<body>
+<button id="close1">关闭上一层</button>
+<button id="close2">关闭上两层</button>
+<script type="text/javascript">
+    document.getElementById("close1").addEventListener('click',()=>{
+        $lemix.ui.navigation.close()
+    })
+    document.getElementById("close2").addEventListener('click',()=>{
+        $lemix.ui.navigation.close('2')
+    })
+</script>
+</body>
+</html>
